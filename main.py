@@ -30,7 +30,7 @@ import plugins.qq_music.web_panel as _qq_music_web  # noqa: F401
 __plugin_meta__ = {
     'name': 'QQ音乐点歌',
     'description': 'QQ音乐点歌：搜索/音源播放，播放消息含封面与LRC歌词，歌词开关（个人/群/全局），Web管理面板',
-    'version': '1.4.2',
+    'version': '1.4.5',
     'license': 'MIT',
 }
 
