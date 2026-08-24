@@ -1,0 +1,307 @@
+{
+  "global": {
+    "show_lyrics": true
+  },
+  "stats": {
+    "searches": 13,
+    "plays": 14,
+    "lyrics_sent": 6,
+    "lyrics_skipped": 8
+  },
+  "users": {
+    "1905407813:D02A5BDBFAE02520EC49F5A0E00C70A7": {
+      "nickname": "飞行漂绒",
+      "last_seen": 1787541859,
+      "show_lyrics": false,
+      "searches": 8,
+      "plays": 8
+    },
+    "1905407813:36AFA5AFE17B5C87B9635C83BB35BB59": {
+      "nickname": "初号机～有问请来咨询群问",
+      "last_seen": 1787541892,
+      "show_lyrics": true,
+      "searches": 2,
+      "plays": 3
+    },
+    "1905407813:3F50B74BD54A0176B66C52E717768E9D": {
+      "nickname": "苜蓿",
+      "last_seen": 1787542055,
+      "searches": 1,
+      "plays": 1
+    }
+  },
+  "song_stats": {
+    "耀斑|HOYO-MiX,YMIR": {
+      "song": "耀斑",
+      "singer": "HOYO-MiX,YMIR",
+      "count": 2
+    },
+    "昔涟|张韶涵,HOYO-MiX": {
+      "song": "昔涟",
+      "singer": "张韶涵,HOYO-MiX",
+      "count": 1
+    },
+    "晴天|周杰伦": {
+      "song": "晴天",
+      "singer": "周杰伦",
+      "count": 7
+    },
+    "稻香|周杰伦": {
+      "song": "稻香",
+      "singer": "周杰伦",
+      "count": 1
+    },
+    "一番星|田井中彩智": {
+      "song": "一番星",
+      "singer": "田井中彩智",
+      "count": 1
+    }
+  },
+  "groups": {
+    "D996AF704D8A8083D2BF35F45EBAE44A": {
+      "last_seen": 1787541796,
+      "searches": 7,
+      "plays": 7,
+      "show_lyrics": false
+    },
+    "390C566181D247CFC059EDC640BCCD53": {
+      "last_seen": 1787542055,
+      "searches": 4,
+      "plays": 5,
+      "show_lyrics": true
+    }
+  },
+  "records": [
+    {
+      "ts": 1787534724,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "耀斑"
+    },
+    {
+      "ts": 1787534730,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "",
+      "song": "耀斑",
+      "singer": "HOYO-MiX,YMIR"
+    },
+    {
+      "ts": 1787534787,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "昔涟"
+    },
+    {
+      "ts": 1787534793,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "",
+      "song": "昔涟",
+      "singer": "张韶涵,HOYO-MiX"
+    },
+    {
+      "ts": 1787536483,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "晴天"
+    },
+    {
+      "ts": 1787536489,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "",
+      "song": "晴天",
+      "singer": "周杰伦"
+    },
+    {
+      "ts": 1787536548,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "稻香"
+    },
+    {
+      "ts": 1787536553,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "",
+      "song": "稻香",
+      "singer": "周杰伦"
+    },
+    {
+      "ts": 1787540326,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "晴天"
+    },
+    {
+      "ts": 1787540332,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "",
+      "song": "晴天",
+      "singer": "周杰伦"
+    },
+    {
+      "ts": 1787540361,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "晴天"
+    },
+    {
+      "ts": 1787540367,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "",
+      "song": "晴天",
+      "singer": "周杰伦"
+    },
+    {
+      "ts": 1787540417,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "晴天"
+    },
+    {
+      "ts": 1787540423,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "D996AF704D8A8083D2BF35F45EBAE44A",
+      "nickname": "飞行漂绒",
+      "keyword": "",
+      "song": "晴天",
+      "singer": "周杰伦"
+    },
+    {
+      "ts": 1787541730,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "飞行漂绒",
+      "keyword": "耀斑"
+    },
+    {
+      "ts": 1787541737,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "D02A5BDBFAE02520EC49F5A0E00C70A7",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "飞行漂绒",
+      "keyword": "",
+      "song": "耀斑",
+      "singer": "HOYO-MiX,YMIR"
+    },
+    {
+      "ts": 1787541829,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "36AFA5AFE17B5C87B9635C83BB35BB59",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "初号机～有问请来咨询群问",
+      "keyword": "晴天"
+    },
+    {
+      "ts": 1787541834,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "36AFA5AFE17B5C87B9635C83BB35BB59",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "初号机～有问请来咨询群问",
+      "keyword": "",
+      "song": "晴天",
+      "singer": "周杰伦"
+    },
+    {
+      "ts": 1787541870,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "36AFA5AFE17B5C87B9635C83BB35BB59",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "初号机～有问请来咨询群问",
+      "keyword": "晴天"
+    },
+    {
+      "ts": 1787541875,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "36AFA5AFE17B5C87B9635C83BB35BB59",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "初号机～有问请来咨询群问",
+      "keyword": "",
+      "song": "晴天",
+      "singer": "周杰伦"
+    },
+    {
+      "ts": 1787541892,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "36AFA5AFE17B5C87B9635C83BB35BB59",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "初号机～有问请来咨询群问",
+      "keyword": "",
+      "song": "晴天",
+      "singer": "周杰伦"
+    },
+    {
+      "ts": 1787542036,
+      "type": "search",
+      "appid": "1905407813",
+      "uid": "3F50B74BD54A0176B66C52E717768E9D",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "苜蓿",
+      "keyword": "一番星"
+    },
+    {
+      "ts": 1787542055,
+      "type": "play",
+      "appid": "1905407813",
+      "uid": "3F50B74BD54A0176B66C52E717768E9D",
+      "gid": "390C566181D247CFC059EDC640BCCD53",
+      "nickname": "苜蓿",
+      "keyword": "",
+      "song": "一番星",
+      "singer": "田井中彩智"
+    }
+  ]
+}
