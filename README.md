@@ -24,4 +24,4 @@
 - 搜索/播放：`https://a.aa.cab/qq.music`
 - 歌词/数据：QQ 音乐官方接口
 
-上传 `plugins/qq_music/` 后重启即可。
+上传插件后重启即可。
