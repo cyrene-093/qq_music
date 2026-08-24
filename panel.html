@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QQ 音乐点歌 · 管理面板</title>
+<style>
+:root{
+  --bg1:#eef6ff; --bg2:#ffffff; --bg3:#dbeafe;
+  --card:rgba(255,255,255,.82);
+  --line:rgba(59,130,246,.16); --line-strong:rgba(59,130,246,.30);
+  --text:#0f2a4a; --muted:#5b7ea6; --faint:#8aa5c4;
+  --accent:#2563eb; --accent2:#06b6d4;
+  --ok:#059669; --err:#e11d48;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  font-family:system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',Roboto,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1100px 700px at 85% -10%, rgba(59,130,246,.22), transparent 58%),
+    radial-gradient(900px 640px at -6% 22%, rgba(6,182,212,.16), transparent 55%),
+    radial-gradient(820px 620px at 52% 115%, rgba(99,102,241,.14), transparent 60%),
+    linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 52%,var(--bg3) 100%);
+  background-attachment:fixed;
+  line-height:1.5;
+}
+.bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.bg-grid{
+  position:absolute;inset:-60px;
+  background-image:
+    linear-gradient(rgba(59,130,246,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(59,130,246,.05) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 30%,transparent 75%);
+  mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 30%,transparent 75%);
+}
+.orb{position:absolute;font-size:34px;opacity:.10;animation:floaty 9s ease-in-out infinite}
+.orb-1{top:12%;left:6%}
+.orb-2{top:34%;right:9%;font-size:26px;animation-delay:-3s}
+.orb-3{bottom:10%;left:16%;font-size:22px;animation-delay:-6s}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-16px) rotate(6deg)}}
+.shell{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:112px 18px 60px}
+.topbar{
+  position:fixed;top:10px;left:0;right:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 18px;margin:0 auto;border-radius:18px;max-width:1280px;
+  background:rgba(255,255,255,.82);border:1px solid var(--line);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 30px rgba(2,6,23,.5);
+}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{
+  width:46px;height:46px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:23px;
+  background:linear-gradient(135deg,#2563eb,#06b6d4 60%,#38bdf8);
+  box-shadow:0 6px 18px rgba(37,99,235,.35),inset 0 1px 0 rgba(255,255,255,.6);
+}
+.brand h1{font-size:20px;font-weight:800;letter-spacing:.4px;color:#1d4ed8;background:linear-gradient(90deg,#1d4ed8,#0891b2);-webkit-background-clip:text;background-clip:text}
+.brand p{font-size:12px;color:var(--muted);margin-top:2px}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.switch-label{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);cursor:pointer;padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.6)}
+.switch-label input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+.btn{border:0;cursor:pointer;font-size:13px;font-weight:700;color:#fff;padding:9px 16px;border-radius:12px;transition:transform .12s,box-shadow .15s,filter .15s;font-family:inherit}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:linear-gradient(135deg,#2563eb,#38bdf8 60%,#06b6d4);box-shadow:0 5px 16px rgba(37,99,235,.35)}
+.btn.green{background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 5px 16px rgba(16,185,129,.35)}
+.btn.red{background:linear-gradient(135deg,#dc2626,#ef4444);box-shadow:0 5px 16px rgba(239,68,68,.35)}
+.btn.gray{background:#cbd9ea;color:#1e3a5f;box-shadow:none}
+.btn.outline{background:transparent;border:1px solid var(--line-strong);box-shadow:none;color:var(--muted)}
+.btn.outline:hover{color:var(--text);border-color:var(--accent)}
+.btn.mini{padding:5px 10px;font-size:12px;border-radius:9px}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:16px}
+.quick-card{
+  border-radius:18px;padding:16px;background:var(--card);border:1px solid var(--line);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 8px 26px rgba(2,6,23,.35);position:relative;z-index:60;
+}
+.quick-title{font-size:13.5px;font-weight:800;color:#1d4ed8;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.quick-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--line-strong),transparent)}
+.picker{position:relative}
+.picker input{
+  width:100%;padding:10px 13px;border-radius:12px;font-size:13.5px;color:var(--text);
+  background:rgba(255,255,255,.85);border:1px solid var(--line-strong);outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.picker input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,.18)}
+.pick-list{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:100;display:none;
+  max-height:240px;overflow:auto;border-radius:12px;
+  background:rgba(255,255,255,.98);border:1px solid var(--line-strong);
+  backdrop-filter:blur(14px);box-shadow:0 14px 34px rgba(37,99,235,.18);
+}
+.pick-list.open{display:block}
+.pick-item{padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(148,163,184,.07)}
+.pick-item:last-child{border-bottom:0}
+.pick-item:hover,.pick-item.active{background:rgba(59,130,246,.10)}
+.pick-item .pm{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.pick-item .pm .tag{font-size:10.5px;color:#1d4ed8;background:rgba(59,130,246,.14);padding:1px 7px;border-radius:99px;flex-shrink:0}
+.pick-item .ps{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:2px;word-break:break-all}
+.pick-empty{padding:12px;font-size:12.5px;color:var(--faint);text-align:center}
+.target{display:none;margin-top:12px;border-radius:14px;padding:13px;background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(6,182,212,.08));border:1px solid rgba(59,130,246,.25)}
+.target.show{display:block;animation:fadeIn .22s ease}
+.t-name{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.t-id{font-family:var(--mono);font-size:11.5px;color:#1d4ed8;word-break:break-all;margin:6px 0 10px;background:rgba(255,255,255,.8);border-radius:9px;padding:7px 10px;border:1px dashed rgba(59,130,246,.35);display:flex;align-items:center;gap:8px;justify-content:space-between}
+.t-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px}
+.t-chip{font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.7);border:1px solid var(--line);padding:3px 10px;border-radius:99px}
+.t-actions{display:flex;gap:8px;flex-wrap:wrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:13px;margin-bottom:16px}
+.stat{
+  position:relative;overflow:hidden;border-radius:16px;padding:15px 16px;color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 7px 20px rgba(2,6,23,.4);transition:transform .15s;
+}
+.stat:hover{transform:translateY(-2px)}
+.stat .num{font-size:27px;font-weight:800;line-height:1.15;text-shadow:0 1px 3px rgba(2,6,23,.28)}
+.stat .lab{font-size:12px;opacity:.96;margin-top:3px;text-shadow:0 1px 2px rgba(2,6,23,.3)}
+.stat::after{content:'';position:absolute;right:-16px;top:-16px;width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.14)}
+.stat::before{content:attr(data-ico);position:absolute;right:12px;bottom:8px;font-size:26px;opacity:.5}
+.st-blue{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+.st-violet{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+.st-green{background:linear-gradient(135deg,#10b981,#047857)}
+.st-amber{background:linear-gradient(135deg,#f59e0b,#b45309)}
+.st-pink{background:linear-gradient(135deg,#ec4899,#be185d)}
+.st-cyan{background:linear-gradient(135deg,#06b6d4,#0e7490)}
+.st-indigo{background:linear-gradient(135deg,#6366f1,#4338ca)}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px}
+.tab{
+  padding:9px 17px;border-radius:12px;border:1px solid var(--line);cursor:pointer;font-size:13.5px;font-weight:700;
+  color:var(--muted);background:rgba(255,255,255,.65);transition:all .15s;font-family:inherit;
+}
+.tab:hover{color:var(--text)}
+.tab.active{color:#fff;border-color:transparent;background:linear-gradient(135deg,#2563eb,#06b6d4);box-shadow:0 4px 14px rgba(37,99,235,.35)}
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{
+  border-radius:18px;padding:18px;margin-bottom:15px;background:var(--card);
+  border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 8px 26px rgba(2,6,23,.32);
+}
+.card h3{font-size:14.5px;font-weight:800;color:#1e3a5f;margin-bottom:13px;display:flex;align-items:center;gap:9px}
+.card h3 .dot{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 10px rgba(139,92,246,.8);flex-shrink:0}
+.card h3 .sp{flex:1;height:1px;background:linear-gradient(90deg,var(--line-strong),transparent)}
+.tbl-wrap{overflow:auto;border-radius:12px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:12.8px;min-width:780px}
+thead th{
+  position:sticky;top:0;z-index:2;background:rgba(59,130,246,.10);color:#1d4ed8;text-align:left;font-weight:800;
+  padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--line-strong);
+}
+tbody td{padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.08);vertical-align:middle}
+tbody tr:hover td{background:rgba(59,130,246,.05)}
+.mono{font-family:var(--mono);font-size:11.3px;color:#1d4ed8}
+.id-cell{display:inline-flex;align-items:center;gap:6px;max-width:230px}
+.id-cell .oid{font-family:var(--mono);font-size:11px;color:#1d4ed8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:175px;display:inline-block;vertical-align:middle}
+.copy-btn{cursor:pointer;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#1d4ed8;font-size:11px;padding:2px 7px;border-radius:7px;transition:all .12s;flex-shrink:0}
+.copy-btn:hover{background:rgba(59,130,246,.22)}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.b-on{background:rgba(16,185,129,.18);color:var(--ok)}
+.b-off{background:rgba(239,68,68,.18);color:var(--err)}
+.b-follow{background:rgba(100,116,139,.25);color:var(--muted)}
+.b-search{background:rgba(59,130,246,.16);color:#1d4ed8}
+.b-play{background:rgba(168,85,247,.16);color:#6d28d9}
+.empty{color:var(--faint);text-align:center;padding:20px 0;font-size:13px}
+.rank{display:flex;flex-direction:column;gap:9px}
+.rank-item{display:flex;align-items:center;gap:10px}
+.rank-no{width:24px;height:24px;border-radius:8px;background:#eaf3ff;color:#1d4ed8;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rank-no.top{background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff}
+.rank-bar{flex:1;height:27px;background:#e0ecfb;border-radius:9px;overflow:hidden;position:relative}
+.rank-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;background:linear-gradient(90deg,#2563eb,#06b6d4 60%,#38bdf8);opacity:.9;transition:width .35s ease}
+.rank-bar span{position:relative;z-index:1;display:flex;align-items:center;height:100%;padding:0 11px;font-size:12.3px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(2,6,23,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-num{width:52px;text-align:right;font-size:12.3px;color:var(--muted);flex-shrink:0}
+.form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.input{background:rgba(255,255,255,.85);border:1px solid var(--line-strong);color:var(--text);padding:9px 12px;border-radius:11px;font-size:13px;outline:none;min-width:200px;transition:border-color .15s,box-shadow .15s}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,.18)}
+.filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.filter .mini-pick,.mini-pick{position:relative;min-width:170px}
+.filter .mini-pick input,.mini-pick input{width:100%}
+.filter .mini-pick .pick-list{top:calc(100% + 4px);z-index:90}
+.note{font-size:12px;color:var(--faint);margin-top:8px}
+.note b{color:var(--muted)}
+.check-line{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.check-line input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="bg">
+  <div class="bg-grid"></div>
+  <div class="orb orb-1">♫</div>
+  <div class="orb orb-2">♪</div>
+  <div class="orb orb-3">♩</div>
+</div>
+
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">🎵</div>
+      <div>
+        <h1>QQ 音乐点歌</h1>
+        <p>统计概览 · 点歌记录 · 用户 · 群歌词控制</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <label class="switch-label"><input type="checkbox" id="autoRefresh" checked> 自动刷新 15s</label>
+      <button class="btn primary" onclick="refreshAll()">⟳ 刷新数据</button>
+    </div>
+  </header>
+
+  <section class="quick">
+    <div class="quick-card">
+      <div class="quick-title">🔍 群快捷搜索</div>
+      <div class="picker">
+        <input id="gPickInput" placeholder="输入群 openid…" autocomplete="off">
+        <div class="pick-list" id="gPickList"></div>
+      </div>
+      <div class="target" id="groupTarget"></div>
+    </div>
+    <div class="quick-card">
+      <div class="quick-title">🔍 用户快捷搜索</div>
+      <div class="picker">
+        <input id="uPickInput" placeholder="输入昵称或用户 openid…" autocomplete="off">
+        <div class="pick-list" id="uPickList"></div>
+      </div>
+      <div class="target" id="userTarget"></div>
+    </div>
+  </section>
+
+  <section class="cards" id="statCards"></section>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="overview" onclick="switchTab('overview')">📊 统计概览</button>
+    <button class="tab" data-tab="records" onclick="switchTab('records')">🕘 点歌记录</button>
+    <button class="tab" data-tab="users" onclick="switchTab('users')">👤 用户</button>
+    <button class="tab" data-tab="groups" onclick="switchTab('groups')">👥 群歌词控制</button>
+  </nav>
+
+  <section class="panel active" id="tab-overview">
+    <div class="card">
+      <h3><span class="dot"></span>全局歌词开关<span class="sp"></span></h3>
+      <div class="form">
+        <label class="check-line"><input type="checkbox" id="globalLyrics"> 全局默认自动发送歌词</label>
+        <button class="btn green mini" onclick="saveGlobal()">保存</button>
+        <span class="note">生效优先级：<b>个人设置 &gt; 群设置 &gt; 全局默认</b></span>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>热门歌曲 TOP10（按播放次数）<span class="sp"></span></h3>
+      <div class="rank" id="topSongs"></div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>最近点歌（10 条）<span class="sp"></span></h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>时间</th><th>群</th><th>用户</th><th>类型</th><th>内容</th></tr></thead>
+          <tbody id="recentRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-records">
+    <div class="card">
+      <h3><span class="dot"></span>点歌记录<span class="sp"></span><span class="note" id="recCount"></span></h3>
+      <div class="filter">
+        <button class="btn mini outline" data-f="" onclick="setRecType('')">全部</button>
+        <button class="btn mini outline" data-f="search" onclick="setRecType('search')">搜索</button>
+        <button class="btn mini outline" data-f="play" onclick="setRecType('play')">播放</button>
+        <div class="mini-pick"><input id="recGidInput" placeholder="按群过滤…" autocomplete="off"><div class="pick-list" id="recGidList"></div></div>
+        <div class="mini-pick"><input id="recUidInput" placeholder="按用户过滤…" autocomplete="off"><div class="pick-list" id="recUidList"></div></div>
+        <input class="input" id="recKw" placeholder="关键词/歌曲/歌手搜索…" style="min-width:180px" oninput="renderRecords()">
+        <button class="btn gray mini" onclick="clearRecFilter()">清除过滤</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>时间</th><th>群 openid</th><th>用户</th><th>用户 openid</th><th>类型</th><th>关键词</th><th>歌曲</th><th>歌手</th></tr></thead>
+          <tbody id="recordRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-users">
+    <div class="card">
+      <h3><span class="dot"></span>编辑用户歌词设置<span class="sp"></span></h3>
+      <div class="form">
+        <div class="mini-pick" style="min-width:260px"><input id="editUserInput" placeholder="选择用户（昵称/openid）…" autocomplete="off"><div class="pick-list" id="editUserList"></div></div>
+        <label class="check-line"><input type="checkbox" id="userLyrics"> 显示歌词</label>
+        <button class="btn green mini" onclick="saveUser()">保存</button>
+        <button class="btn outline mini" onclick="clearUserOverride()">跟随全局</button>
+        <span class="note" id="editUserHint"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="dot"></span>用户列表<span class="sp"></span></h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>昵称</th><th>用户 openid</th><th>歌词</th><th>搜索</th><th>播放</th><th>最近活跃</th><th>操作</th></tr></thead>
+          <tbody id="userRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-groups">
+    <div class="card">
+      <h3><span class="dot"></span>群歌词控制（群主/管理员也可在群内用 #群歌词开 / #群歌词关）<span class="sp"></span></h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>群 openid</th><th>歌词</th><th>搜索</th><th>播放</th><th>最近活跃</th><th>操作</th></tr></thead>
+          <tbody id="groupRows"></tbody>
+        </table>
+      </div>
+      <div class="form" style="margin-top:14px">
+        <input class="input" id="newGroupId" placeholder="群 openid（未记录过的群）" style="min-width:240px">
+        <button class="btn green mini" onclick="setNewGroup(true)">开启歌词</button>
+        <button class="btn red mini" onclick="setNewGroup(false)">关闭歌词</button>
+        <button class="btn outline mini" onclick="setNewGroup(null)">跟随全局</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+'use strict';
+let DASH={stats:{},users:[],groups:[],top_songs:[]};
+let RECS=[];
+let SETTINGS={show_lyrics:true};
+let recFilter={type:'',gid:'',uid:'',kw:''};
+let editUserKey='';
+let pickedGroup=null;
+let pickedUser=null;
+let timer=null;
+let groupPick=null,userPick=null,recGidPick=null,recUidPick=null,editUserPick=null;
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtTs=ts=>{if(!ts)return '-';const d=new Date(ts*1000),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());};
+const badge=v=>{if(v===true)return '<span class="badge b-on">开</span>';if(v===false)return '<span class="badge b-off">关</span>';return '<span class="badge b-follow">跟随全局</span>';};
+const shortId=s=>{s=String(s||'');return s.length>16?s.slice(0,8)+'…'+s.slice(-6):s;};
+function copyId(txt){try{navigator.clipboard.writeText(txt).then(()=>toast('已复制 openid')).catch(()=>toast('复制失败'));}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('已复制 openid');}catch(err){}document.body.removeChild(ta);}}
+function toast(msg){let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:999;background:rgba(15,23,42,.92);border:1px solid rgba(148,163,184,.28);color:#c7d2fe;padding:9px 16px;border-radius:12px;font-size:12.5px;box-shadow:0 8px 24px rgba(2,6,23,.6);transition:opacity .3s;pointer-events:none';document.body.appendChild(t);}t.textContent=msg;t.style.opacity='1';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.opacity='0';},1600);}
+const oidCell=id=>{id=String(id||'');if(!id)return '-';return '<span class="id-cell"><span class="oid" title="'+esc(id)+'">'+esc(shortId(id))+'</span><button class="copy-btn" onclick="copyId(\''+id.replace(/'/g,"\\'")+'\')">复制</button></span>';};
+const groupName=gid=>{const g=DASH.groups.find(x=>x.group_id===gid);return g&&g.name?g.name:'';};
+const userName=uid=>{const u=DASH.users.find(x=>x.user_id===uid);return u&&u.nickname?u.nickname:'';};
+
+async function refreshAll(){
+  try{
+    const [s,r,g]=await Promise.all([
+      fetch('/api/ext/qq_music/stats').then(x=>x.json()),
+      fetch('/api/ext/qq_music/records?limit=300').then(x=>x.json()),
+      fetch('/api/ext/qq_music/settings').then(x=>x.json()),
+    ]);
+    if(s&&s.data)DASH=s.data;
+    if(r&&r.data&&Array.isArray(r.data.records))RECS=r.data.records;
+    if(g&&typeof g.show_lyrics==='boolean')SETTINGS.show_lyrics=g.show_lyrics;
+    renderAll();
+  }catch(e){toast('数据加载失败，请检查网络');}
+}
+
+function renderAll(){
+  renderStats();
+  renderTop();
+  renderRecent();
+  renderGroupPicker();
+  renderUserPicker();
+  renderGroupTarget();
+  renderUserTarget();
+  renderRecords();
+  renderUsers();
+  renderGroups();
+  $('globalLyrics').checked=SETTINGS.show_lyrics;
+}
+
+function renderStats(){
+  const st=DASH.stats||{};
+  const n=v=>{const x=parseInt(v||0,10);return x>=10000?(x/10000).toFixed(1)+'w':x;};
+  const defs=[
+    ['🔎','st-blue',n(st.searches),'搜索次数'],
+    ['▶️','st-violet',n(st.plays),'播放次数'],
+    ['📜','st-green',n(st.lyrics_sent),'歌词已发送'],
+    ['⏭️','st-amber',n(st.lyrics_skipped),'歌词跳过'],
+    ['👥','st-indigo',(DASH.groups||[]).length,'活跃群'],
+    ['👤','st-pink',(DASH.users||[]).length,'活跃用户'],
+  ];
+  $('statCards').innerHTML=defs.map(d=>'<div class="stat '+d[1]+'" data-ico="'+d[0]+'"><div class="num">'+esc(d[2])+'</div><div class="lab">'+esc(d[3])+'</div></div>').join('');
+}
+
+function renderTop(){
+  const top=DASH.top_songs||[];
+  const box=$('topSongs');
+  if(!top.length){box.innerHTML='<div class="empty">暂无播放记录</div>';return;}
+  const max=Math.max(1,...top.slice(0,10).map(t=>parseInt(t.count||0,10)));
+  box.innerHTML=top.slice(0,10).map((t,i)=>{
+    const w=Math.round(parseInt(t.count||0,10)/max*100);
+    const noCls=i<3?'rank-no top':'rank-no';
+    const name=esc(t.song||'未知')+(t.singer?' · '+esc(t.singer):'');
+    return '<div class="rank-item"><div class="'+noCls+'">'+(i+1)+'</div><div class="rank-bar"><i style="width:'+w+'%"></i><span>'+name+'</span></div><div class="rank-num">'+esc(t.count)+' 次</div></div>';
+  }).join('');
+}
+
+function renderRecent(){
+  const rows=$('recentRows');
+  const recs=RECS.slice(0,10);
+  if(!recs.length){rows.innerHTML='<tr><td colspan="5" class="empty">暂无点歌记录</td></tr>';return;}
+  rows.innerHTML=recs.map(r=>{
+    const gn=r.gid||'私聊';
+    const un=r.nickname||userName(r.uid)||r.uid||'未知';
+    const type=r.type==='play'?'<span class="badge b-play">播放</span>':'<span class="badge b-search">搜索</span>';
+    const content=r.type==='play'?esc(r.song||'未知')+(r.singer?' - '+esc(r.singer):''):esc(r.keyword||'');
+    return '<tr><td>'+fmtTs(r.ts)+'</td><td>'+esc(gn)+'</td><td>'+esc(un)+'</td><td>'+type+'</td><td>'+content+'</td></tr>';
+  }).join('');
+}
+
+/* ---------- 通用可搜索下拉组件 ---------- */
+function setupPicker(inputId,listId,onPick){
+  let items=[],sel=null;
+  const input=$(inputId),list=$(listId);
+  function isOutside(e){return !(e.target.closest('.picker')||e.target.closest('.mini-pick'));}
+  function render(){
+    const q=(input.value||'').trim().toLowerCase();
+    const pool=items.filter(it=>!q||(it.main||'').toLowerCase().includes(q)||(it.sub||'').toLowerCase().includes(q));
+    if(!pool.length){list.innerHTML='<div class="pick-empty">无匹配结果</div>';return;}
+    list.innerHTML=pool.slice(0,60).map(it=>'<div class="pick-item" data-id="'+esc(it.id)+'"><div class="pm">'+esc(it.main)+'<span class="tag">'+esc(it.tag||'')+'</span></div><div class="ps">'+esc(it.sub||'')+'</div></div>').join('');
+    list.querySelectorAll('.pick-item').forEach(el=>{
+      el.addEventListener('click',ev=>{ev.stopPropagation();sel=items.find(x=>x.id===el.dataset.id)||null;if(sel)input.value=sel.main;close();onPick&&onPick(sel);});
+    });
+  }
+  function open(){list.classList.add('open');render();}
+  function close(){list.classList.remove('open');}
+  input.addEventListener('focus',open);
+  input.addEventListener('input',render);
+  document.addEventListener('click',e=>{if(isOutside(e))close();});
+  return {
+    setItems(arr){items=arr||[];},
+    get:()=>sel,
+    set(item){sel=item;input.value=item?item.main:'';},
+    clear(){sel=null;input.value='';},
+  };
+}
+
+/* ---------- 快捷搜索：群 & 用户 ---------- */
+function onPickGroup(g){pickedGroup=g;renderGroupTarget();}
+function onPickUser(u){pickedUser=u;renderUserTarget();}
+function renderGroupPicker(){
+  groupPick=groupPick||setupPicker('gPickInput','gPickList',onPickGroup);
+  groupPick.setItems(DASH.groups.map(g=>({id:g.group_id,main:g.group_id,sub:g.group_id,tag:'群'})));
+}
+function renderUserPicker(){
+  userPick=userPick||setupPicker('uPickInput','uPickList',onPickUser);
+  userPick.setItems(DASH.users.map(u=>({id:u.user_key,main:u.nickname||u.user_id,sub:u.user_id,tag:u.appid||'用户'})));
+}
+
+function renderGroupTarget(){
+  const box=$('groupTarget');
+  const g=pickedGroup;
+  if(!g){box.className='target';box.innerHTML='';return;}
+  const info=DASH.groups.find(x=>x.group_id===g.id);
+  box.className='target show';
+  box.innerHTML=
+    '<div class="t-name">👥 群 openid '+badge(info?info.effective_show_lyrics:null)+'</div>'+
+    '<div class="t-id"><span>'+esc(g.id)+'</span><button class="copy-btn" onclick="copyId(\''+g.id.replace(/'/g,"\\'")+'\')">复制 openid</button></div>'+
+    '<div class="t-stats">'+
+      '<span class="t-chip">搜索 '+esc(info?info.searches:0)+'</span>'+
+      '<span class="t-chip">播放 '+esc(info?info.plays:0)+'</span>'+
+      '<span class="t-chip">最近活跃 '+fmtTs(info?info.last_seen:null)+'</span>'+
+    '</div>'+
+    '<div class="t-actions">'+
+      '<button class="btn cyan mini" onclick="viewGroupRecords(\''+g.id.replace(/'/g,"\\'")+'\')">📋 查看该群点歌记录</button>'+
+      '<button class="btn outline mini" onclick="switchTab(\'groups\')">群设置</button>'+
+    '</div>';
+}
+function viewGroupRecords(gid){
+  recFilter={type:recFilter.type,gid:gid,uid:'',kw:''};
+  const g=DASH.groups.find(x=>x.group_id===gid);
+  recGidPick&&recGidPick.set(g?{id:gid,main:gid,sub:gid}:null);
+  recUidPick&&recUidPick.clear();
+  switchTab('records');
+  renderRecords();
+}
+
+function renderUserTarget(){
+  const box=$('userTarget');
+  const u=pickedUser;
+  if(!u){box.className='target';box.innerHTML='';return;}
+  const info=DASH.users.find(x=>x.user_key===u.id);
+  box.className='target show';
+  box.innerHTML=
+    '<div class="t-name">👤 '+esc(u.main)+' '+badge(info?info.effective_show_lyrics:null)+'</div>'+
+    '<div class="t-id"><span>'+esc(u.id)+'</span><button class="copy-btn" onclick="copyId(\''+u.id.replace(/'/g,"\\'")+'\')">复制 user_key</button></div>'+
+    '<div class="t-stats">'+
+      '<span class="t-chip">搜索 '+esc(info?info.searches:0)+'</span>'+
+      '<span class="t-chip">播放 '+esc(info?info.plays:0)+'</span>'+
+      '<span class="t-chip">最近活跃 '+fmtTs(info?info.last_seen:null)+'</span>'+
+    '</div>'+
+    '<div class="t-actions">'+
+      '<button class="btn cyan mini" onclick="viewUserRecords(\''+u.id.replace(/'/g,"\\'")+'\')">📋 查看该用户点歌记录</button>'+
+      '<button class="btn outline mini" onclick="switchTab(\'users\')">用户设置</button>'+
+    '</div>';
+}
+function viewUserRecords(ukey){
+  const uid=ukey.split(':')[1]||ukey;
+  recFilter={type:recFilter.type,gid:'',uid:uid,kw:''};
+  const u=DASH.users.find(x=>x.user_key===ukey);
+  recGidPick&&recGidPick.clear();
+  recUidPick&&recUidPick.set(u?{id:ukey,main:u.nickname||uid,sub:uid}:null);
+  switchTab('records');
+  renderRecords();
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+t));
+}
+/* ---------- 点歌记录 ---------- */
+function renderRecords(){
+  const rows=$('recordRows');
+  const kw=(recFilter.kw||'').trim().toLowerCase();
+  let recs=RECS.filter(r=>{
+    if(recFilter.type&&r.type!==recFilter.type)return false;
+    if(recFilter.gid&&r.gid!==recFilter.gid)return false;
+    if(recFilter.uid&&r.uid!==recFilter.uid)return false;
+    if(kw){
+      const hay=((r.keyword||'')+' '+(r.song||'')+' '+(r.singer||'')+' '+(r.nickname||'')).toLowerCase();
+      if(!hay.includes(kw))return false;
+    }
+    return true;
+  });
+  $('recCount').textContent='共 '+recs.length+' 条';
+  if(!recs.length){rows.innerHTML='<tr><td colspan="8" class="empty">暂无匹配记录</td></tr>';return;}
+  rows.innerHTML=recs.map(r=>{
+    const gn=r.gid||'私聊';
+    const un=r.nickname||userName(r.uid)||r.uid||'未知';
+    const type=r.type==='play'?'<span class="badge b-play">播放</span>':'<span class="badge b-search">搜索</span>';
+    return '<tr>'+
+      '<td>'+fmtTs(r.ts)+'</td>'+
+      '<td>'+oidCell(r.gid)+'</td>'+
+      '<td>'+esc(un)+'</td>'+
+      '<td>'+oidCell(r.uid)+'</td>'+
+      '<td>'+type+'</td>'+
+      '<td>'+esc(r.keyword||'-')+'</td>'+
+      '<td>'+esc(r.song||'-')+'</td>'+
+      '<td>'+esc(r.singer||'-')+'</td>'+
+      '</tr>';
+  }).join('');
+}
+function setRecType(t){
+  recFilter.type=t;
+  document.querySelectorAll('#tab-records .filter .btn[data-f]').forEach(b=>b.classList.toggle('active',b.dataset.f===t));
+  renderRecords();
+}
+function clearRecFilter(){
+  recFilter={type:'',gid:'',uid:'',kw:''};
+  recGidPick&&recGidPick.clear();
+  recUidPick&&recUidPick.clear();
+  $('recKw').value='';
+  document.querySelectorAll('#tab-records .filter .btn[data-f]').forEach(b=>b.classList.remove('active'));
+  renderRecords();
+}
+function renderRecPickers(){
+  recGidPick=recGidPick||setupPicker('recGidInput','recGidList',g=>{recFilter.gid=g?g.id:'';renderRecords();});
+  recUidPick=recUidPick||setupPicker('recUidInput','recUidList',u=>{recFilter.uid=u?(u.id.split(':')[1]||u.id):'';renderRecords();});
+  recGidPick.setItems(DASH.groups.map(g=>({id:g.group_id,main:g.group_id,sub:g.group_id,tag:'群'})));
+  recUidPick.setItems(DASH.users.map(u=>({id:u.user_key,main:u.nickname||u.user_id,sub:u.user_id,tag:u.appid||'用户'})));
+}
+
+/* ---------- 用户设置 ---------- */
+function renderEditUserPicker(){
+  editUserPick=editUserPick||setupPicker('editUserInput','editUserList',u=>{
+    editUserKey=u?u.id:'';
+    const info=DASH.users.find(x=>x.user_key===u.id);
+    $('userLyrics').checked=info?info.effective_show_lyrics:SETTINGS.show_lyrics;
+    $('editUserHint').textContent=u?('已选择：'+u.id):'';
+  });
+  editUserPick.setItems(DASH.users.map(u=>({id:u.user_key,main:u.nickname||u.user_id,sub:u.user_id,tag:u.appid||'用户'})));
+}
+function renderUsers(){
+  const rows=$('userRows');
+  const users=DASH.users||[];
+  if(!users.length){rows.innerHTML='<tr><td colspan="7" class="empty">暂无用户数据</td></tr>';return;}
+  rows.innerHTML=users.map(u=>{
+    return '<tr>'+
+      '<td><b>'+esc(u.nickname||'（未命名）')+'</b></td>'+
+      '<td>'+oidCell(u.user_id)+'</td>'+
+      '<td>'+badge(u.effective_show_lyrics)+' <span class="note" style="margin:0">'+badge(u.show_lyrics)+'</span></td>'+
+      '<td>'+esc(u.searches)+'</td>'+
+      '<td>'+esc(u.plays)+'</td>'+
+      '<td>'+fmtTs(u.last_seen)+'</td>'+
+      '<td><button class="btn mini outline" onclick="editUserFromTable(\''+u.user_key.replace(/'/g,"\\'")+'\')">✏️ 编辑</button></td>'+
+      '</tr>';
+  }).join('');
+}
+function editUserFromTable(ukey){
+  switchTab('users');
+  const u=DASH.users.find(x=>x.user_key===ukey);
+  if(!u)return;
+  editUserKey=ukey;
+  editUserPick&&editUserPick.set({id:ukey,main:u.nickname||u.user_id});
+  $('userLyrics').checked=u.effective_show_lyrics;
+  $('editUserHint').textContent='已选择：'+ukey;
+  $('editUserInput').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function saveUser(){
+  if(!editUserKey){toast('请先选择用户');return;}
+  const body={user_key:editUserKey,show_lyrics:$('userLyrics').checked};
+  try{
+    const r=await fetch('/api/ext/qq_music/user_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(x=>x.json());
+    if(r&&r.ok){toast('已保存');refreshAll();}else{toast(r&&r.error?r.error:'保存失败');}
+  }catch(e){toast('保存失败');}
+}
+async function clearUserOverride(){
+  if(!editUserKey){toast('请先选择用户');return;}
+  const body={user_key:editUserKey,show_lyrics:null};
+  try{
+    const r=await fetch('/api/ext/qq_music/user_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(x=>x.json());
+    if(r&&r.ok){toast('已恢复跟随全局');refreshAll();}else{toast('操作失败');}
+  }catch(e){toast('操作失败');}
+}
+
+/* ---------- 群歌词控制 ---------- */
+function renderGroups(){
+  const rows=$('groupRows');
+  const groups=DASH.groups||[];
+  if(!groups.length){rows.innerHTML='<tr><td colspan="6" class="empty">暂无群数据</td></tr>';return;}
+  rows.innerHTML=groups.map(g=>{
+    const gid=g.group_id.replace(/'/g,"\\'");
+    return '<tr>'+
+      '<td>'+oidCell(g.group_id)+'</td>'+
+      '<td>'+badge(g.effective_show_lyrics)+' <span class="note" style="margin:0">'+badge(g.show_lyrics)+'</span></td>'+
+      '<td>'+esc(g.searches)+'</td>'+
+      '<td>'+esc(g.plays)+'</td>'+
+      '<td>'+fmtTs(g.last_seen)+'</td>'+
+      '<td>'+
+        '<button class="btn mini green" onclick="setGroupLyrics(\''+gid+'\',true)">开</button> '+
+        '<button class="btn mini red" onclick="setGroupLyrics(\''+gid+'\',false)">关</button> '+
+        '<button class="btn mini outline" onclick="setGroupLyrics(\''+gid+'\',null)">跟随</button>'+
+      '</td>'+
+      '</tr>';
+  }).join('');
+}
+async function setGroupLyrics(gid,val){
+  try{
+    const r=await fetch('/api/ext/qq_music/group_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({group_id:gid,show_lyrics:val})}).then(x=>x.json());
+    if(r&&r.ok){toast('已保存');refreshAll();}else{toast(r&&r.error?r.error:'操作失败');}
+  }catch(e){toast('操作失败');}
+}
+async function setNewGroup(val){
+  const gid=($('newGroupId').value||'').trim();
+  if(!gid){toast('请输入群 openid');return;}
+  const body={group_id:gid,show_lyrics:val};
+  try{
+    const r=await fetch('/api/ext/qq_music/group_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(x=>x.json());
+    if(r&&r.ok){toast('已保存');$('newGroupId').value='';refreshAll();}else{toast(r&&r.error?r.error:'操作失败');}
+  }catch(e){toast('操作失败');}
+}
+
+/* ---------- 全局设置 ---------- */
+async function saveGlobal(){
+  try{
+    const r=await fetch('/api/ext/qq_music/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({show_lyrics:$('globalLyrics').checked})}).then(x=>x.json());
+    if(r&&r.ok){toast('已保存');SETTINGS.show_lyrics=r.show_lyrics;refreshAll();}else{toast('保存失败');}
+  }catch(e){toast('保存失败');}
+}
+
+/* ---------- 初始化 ---------- */
+function init(){
+  renderRecPickers();
+  renderEditUserPicker();
+  refreshAll();
+  const auto=$('autoRefresh');
+  auto.addEventListener('change',()=>{
+    clearInterval(timer);
+    if(auto.checked)timer=setInterval(refreshAll,15000);
+  });
+  timer=setInterval(refreshAll,15000);
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
