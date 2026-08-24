@@ -31,9 +31,11 @@ import plugins.qq_music.web_panel as _qq_music_web  # noqa: F401
 
 __plugin_meta__ = {
     'name': 'QQ音乐点歌',
+    'author': '飞行漂绒',
     'description': 'QQ音乐点歌：搜索/音源播放/完整歌词，歌词显示开关（个人/群/全局），含统计与Web管理面板',
     'version': '1.4.1',
     'license': 'MIT',
+    'github': 'https://github.com/cyrene-093/qq_music',
 }
 
 log = logging.getLogger('plugins.qq_music')
