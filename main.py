@@ -13,16 +13,14 @@ from plugins.qq_music.service import (
     PLAY_ERR_BAD_INDEX,
     PLAY_ERR_EXPIRED,
     aclose,
-    build_lyric_markdown,
     fetch_play_with_lyric,
     format_help_markdown,
+    format_play_detail_markdown,
     format_search_list,
-    get_last_lyric,
     help_buttons,
     play_buttons,
     search_buttons,
     search_songs,
-    store_last_lyric,
     store_search,
 )
 
@@ -31,11 +29,9 @@ import plugins.qq_music.web_panel as _qq_music_web  # noqa: F401
 
 __plugin_meta__ = {
     'name': 'QQ音乐点歌',
-    'author': '飞行漂绒',
-    'description': 'QQ音乐点歌：搜索/音源播放/完整歌词，歌词显示开关（个人/群/全局），含统计与Web管理面板',
-    'version': '1.4.1',
+    'description': 'QQ音乐点歌：搜索/音源播放，播放消息含封面与LRC歌词，歌词开关（个人/群/全局），Web管理面板',
+    'version': '1.4.2',
     'license': 'MIT',
-    'github': 'https://github.com/cyrene-093/qq_music',
 }
 
 log = logging.getLogger('plugins.qq_music')
@@ -83,7 +79,6 @@ def _is_group_admin(event) -> bool:
 
 
 def _group_lyrics_blocked(event, store) -> bool:
-    """群主/管理员已显式关闭本群歌词，且操作者不是管理员（按钮回调无法取角色，按普通成员处理）。"""
     gid = _gid(event)
     if not gid or not store.group_lyrics_forced_off(gid):
         return False
@@ -106,23 +101,6 @@ def _music_filename(data: dict, music_url: str) -> str:
     return f'{name}{ext}'
 
 
-def _play_info_markdown(data: dict, music_url: str = '', *, lyrics_hint: str = '') -> str:
-    song = (str(data.get('song') or '未知').translate(_STRIP_TBL).strip()[:50]) or '未知'
-    singer = (str(data.get('singer') or '未知').translate(_STRIP_TBL).strip()[:50]) or '未知'
-    album = (str(data.get('album_name') or '').translate(_STRIP_TBL).strip()[:50])
-    lines = [
-        f'## 🎵 {song}',
-        '──────────────',
-        f'**歌手**：{singer}',
-        f'**专辑**：{album or "未知"}',
-    ]
-    if lyrics_hint:
-        lines.extend(['', lyrics_hint])
-    if music_url:
-        lines.extend(['', f'[备用播放链接]({music_url})'])
-    return '\n'.join(lines)
-
-
 async def _reply_md(
     event,
     content: str,
@@ -141,19 +119,6 @@ async def _reply_md(
         skip_suffix=True,
         force_verify_image_resource=force_verify_image,
     )
-
-
-async def _send_lyric(event) -> None:
-    _touch_user(event)
-    result = get_last_lyric(_session_uid(event), _appid(event), _gid(event))
-    if not result:
-        await _reply_md(
-            event,
-            '暂无歌词缓存，请先 `#点歌 歌名` 再 `#听1`（搜索列表 3 分钟内有效）。',
-            buttons=help_buttons(),
-        )
-        return
-    await _reply_md(event, result['markdown'], buttons=play_buttons())
 
 
 async def _send_music_audio(event, music_url: str, data: dict, caption: str) -> None:
@@ -215,23 +180,29 @@ async def _play_song(event, index: int) -> None:
         if gid and store.group_lyrics_forced_off(gid):
             lyrics_hint = '本群歌词已被管理员/群主关闭，无法自行开启（可联系管理员）。'
         else:
-            lyrics_hint = '歌词已关闭，发送 `#歌词开` 开启，或 `#歌词` 手动查看。'
+            lyrics_hint = '歌词已关闭，发送 `#歌词开` 可在播放时显示歌词。'
 
-    await _reply_md(
-        event,
-        _play_info_markdown(data, music_url, lyrics_hint=lyrics_hint),
-        buttons=play_buttons(),
+    if lyric_bundle.lines and show_lyrics:
+        store.record_lyric_sent()
+    elif lyric_bundle.lines:
+        store.record_lyric_skipped()
+
+    detail_md = format_play_detail_markdown(
+        data,
+        lyric_bundle,
+        show_lyrics=show_lyrics,
+        lyrics_hint=lyrics_hint,
+        music_url=music_url,
     )
-
-    if lyric_bundle.lines:
-        song = str(data.get('song') or '未知')
-        lyric_md = build_lyric_markdown(lyric_bundle, song)
-        store_last_lyric(uid, appid, gid, song, lyric_md)
-        if show_lyrics:
-            store.record_lyric_sent()
-            await _reply_md(event, lyric_md, buttons=play_buttons())
-        else:
-            store.record_lyric_skipped()
+    has_cover = '![' in detail_md and '](http' in detail_md
+    ok = await _reply_md(
+        event,
+        detail_md,
+        buttons=play_buttons(),
+        force_verify_image=has_cover,
+    )
+    if ok is False and has_cover:
+        await _reply_md(event, detail_md, buttons=play_buttons(), force_verify_image=False)
 
     mention = _mention_uid(event)
     song = data.get('song') or '未知'
@@ -259,7 +230,7 @@ async def cmd_music_help(event, match):
     await _reply_md(event, format_help_markdown(), buttons=help_buttons())
 
 
-@handler(rf'^{_P}点歌(?:\s+(.+))?$', name='#点歌', desc='搜索或播放：#点歌 歌名 / #点歌 1', priority=25, block=True)
+@handler(rf'^{_P}点歌(?:\s+(.+))?$', name='#点歌', desc='搜索歌曲：#点歌 歌名', priority=25, block=True)
 async def cmd_song(event, match):
     _touch_user(event)
     arg = (match.group(1) or '').strip()
@@ -267,9 +238,6 @@ async def cmd_song(event, match):
         await _reply_md(event, format_help_markdown(), buttons=help_buttons())
         return
     uid, appid, gid = _session_uid(event), _appid(event), _gid(event)
-    if arg.isdigit():
-        await _play_song(event, int(arg))
-        return
     try:
         songs = await search_songs(arg)
         if not songs:
@@ -297,11 +265,6 @@ async def cmd_listen(event, match):
     await _play_song(event, int(match.group(1)))
 
 
-@handler(rf'^{_P}歌词$', name='#歌词', desc='查看完整歌词', priority=24, block=True)
-async def cmd_lyric(event, match):
-    await _send_lyric(event)
-
-
 @handler(rf'^{_P}歌词开关$', name='#歌词开关', desc='切换个人歌词显示开关', priority=24, block=True)
 async def cmd_lyric_toggle(event, match):
     _touch_user(event)
@@ -321,7 +284,7 @@ async def cmd_lyric_toggle(event, match):
     state = '开启' if new_val else '关闭'
     await _reply_md(
         event,
-        f'歌词显示已**{state}**。\n播放时将{"自动发送歌词" if new_val else "不再自动发送歌词"}（仍可用 `#歌词` 手动查看）。',
+        f'歌词显示已**{state}**。\n播放时将{"附带 LRC 歌词" if new_val else "不再附带歌词"}。',
         buttons=help_buttons(),
     )
 
@@ -334,7 +297,7 @@ async def cmd_lyric_on(event, match):
         await _reply_md(event, _GROUP_LYRIC_OFF_MSG, buttons=help_buttons())
         return
     get_store().set_user_show_lyrics(_appid(event), _session_uid(event), True, _nickname(event))
-    await _reply_md(event, '歌词显示已**开启**，播放时将自动发送歌词。', buttons=help_buttons())
+    await _reply_md(event, '歌词显示已**开启**，播放时将附带 LRC 歌词。', buttons=help_buttons())
 
 
 @handler(rf'^{_P}歌词关$', name='#歌词关', desc='关闭个人歌词显示', priority=24, block=True)
@@ -343,13 +306,12 @@ async def cmd_lyric_off(event, match):
     get_store().set_user_show_lyrics(_appid(event), _session_uid(event), False, _nickname(event))
     await _reply_md(
         event,
-        '歌词显示已**关闭**，播放时不再自动发送歌词（可用 `#歌词` 手动查看）。',
+        '歌词显示已**关闭**，播放时不再附带歌词（发送 `#歌词开` 可恢复）。',
         buttons=help_buttons(),
     )
 
 
 async def _set_group_lyrics(event, value: bool) -> None:
-    """群歌词开关（仅群主/管理员），优先级：个人 > 群 > 全局。"""
     _touch_user(event)
     gid = _gid(event)
     if not gid:
@@ -369,9 +331,9 @@ async def _set_group_lyrics(event, value: bool) -> None:
         (
             f'本群歌词显示已**{state}**。\n'
             + (
-                '播放时将自动发送歌词，成员仍可自行用 `#歌词开/关` 设置个人偏好。'
+                '播放时将附带歌词，成员仍可自行用 `#歌词开/关` 设置个人偏好。'
                 if value
-                else '播放时不再自动发送歌词；**普通成员无法自行开启**，'
+                else '播放时不再附带歌词；**普通成员无法自行开启**，'
                      '如需恢复请管理员/群主发送 `#群歌词开` 或在 Web 面板开启本群歌词。'
             )
         ),
@@ -410,8 +372,69 @@ async def cmd_group_lyric_status(event, match):
     )
 
 
+def _is_bot_owner(event, appid: str = '') -> bool:
+    """机器人主人：bot 配置 owner_ids 中的成员。"""
+    try:
+        from core.base.config import cfg as _global_cfg
+    except Exception:
+        return False
+    candidates = {str(_session_uid(event))}
+    raw_uid = str(getattr(event, 'user_id', '') or '')
+    if raw_uid:
+        candidates.add(raw_uid)
+    if not candidates or candidates == {''}:
+        return False
+    try:
+        bot_cfg = _global_cfg.get_bot_config(appid) or {}
+    except Exception:
+        bot_cfg = {}
+    owner_ids = {str(x) for x in (bot_cfg.get('owner_ids') or [])}
+    return bool(candidates & owner_ids)
+
+
+@handler(
+    r'^qm:group_lyric:toggle$',
+    name='群歌词开关按钮',
+    desc='群主/管理员/机器人主人 一键开关本群歌词',
+    event_types=[INTERACTION_CREATE],
+)
+async def _on_group_lyric_button(event, match):
+    _touch_user(event)
+    store = get_store()
+    gid = _gid(event)
+    if not gid:
+        await _reply_md(
+            event,
+            '群歌词开关仅限群聊使用；请用 `#歌词开` / `#歌词关` 设置个人偏好。',
+            buttons=help_buttons(),
+        )
+        return
+    appid = _resolve_appid(event, store)
+    if not (_is_group_admin(event) or _is_bot_owner(event, appid)):
+        await _reply_md(
+            event,
+            '仅**群主/管理员/机器人主人**可控制本群歌词显示。',
+            buttons=help_buttons(),
+        )
+        return
+    new_val = store.toggle_group_show_lyrics(gid)
+    state = '开启' if new_val else '关闭'
+    await _reply_md(
+        event,
+        (
+            f'本群歌词显示已**{state}**。\n'
+            + (
+                '播放时将附带歌词，成员仍可自行用 `#歌词开/关` 设置个人偏好。'
+                if new_val
+                else '播放时不再附带歌词；**普通成员无法自行开启**，'
+                     '如需恢复请群主/管理员发送 `#群歌词开` 或在 Web 面板开启本群歌词。'
+            )
+        ),
+        buttons=help_buttons(),
+    )
+
+
 def _resolve_appid(event, store) -> str:
-    """按钮回调事件通常不携带 appid：优先取事件值，否则从已有用户记录反查。"""
     appid = _appid(event)
     if appid:
         return appid
@@ -426,7 +449,7 @@ def _resolve_appid(event, store) -> str:
 @handler(
     r'^qm:lyric:toggle$',
     name='歌词开关按钮',
-    desc='处理歌词开关按钮回调（开/关一键切换，与 #歌词开关 同一持久化偏好）',
+    desc='处理歌词开关按钮回调',
     event_types=[INTERACTION_CREATE],
     priority=90,
     block=True,
@@ -435,7 +458,6 @@ async def lyric_toggle_button(event, match):
     store = get_store()
     gid = str(getattr(event, 'group_id', '') or '').strip() or str(getattr(event, 'group_openid', '') or '').strip()
     if gid and store.group_lyrics_forced_off(gid):
-        # 按钮回调拿不到 member_role，统一按普通成员处理：群已关闭时禁止开启
         await _reply_md(event, _GROUP_LYRIC_OFF_MSG, buttons=help_buttons())
         return
     new_val = store.toggle_user_show_lyrics(
@@ -444,6 +466,6 @@ async def lyric_toggle_button(event, match):
     state = '开启' if new_val else '关闭'
     await _reply_md(
         event,
-        f'歌词显示已**{state}**。\n播放时将{"自动发送歌词" if new_val else "不再自动发送歌词"}（可用 `#歌词` 手动查看）。',
+        f'歌词显示已**{state}**。\n播放时将{"附带 LRC 歌词" if new_val else "不再附带歌词"}。',
         buttons=help_buttons(),
     )

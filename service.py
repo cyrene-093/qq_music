@@ -26,6 +26,7 @@ _CACHE_CAP = 100
 _SEARCH_TTL_SEC = 180
 _SEARCH_LIMIT = 10
 _COVER_IMG_SIZE = 22
+_PLAY_COVER_SIZE = 120
 _LYRIC_TRANS_MAX_LINES = 80
 _LRC_LINE_RE = re.compile(r'\[(\d+):(\d+(?:\.\d+)?)\](.*)')
 _META_PREFIXES = (
@@ -35,10 +36,8 @@ _META_PREFIXES = (
 
 _client: AsyncHttpClient | None = None
 _cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
-_last_lyric_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
-_kw_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
-_KW_TTL_SEC = 120
-_KW_CAP = 50
+_KW_TTL_SEC = 600
+_KW_CAP = 200
 
 
 @dataclass
@@ -95,9 +94,7 @@ def _clear_search_cache(uid: str, appid: str, group_id: str = '') -> None:
     _cache.pop(key, None)
 
 
-def _clear_last_lyric(uid: str, appid: str, group_id: str = '') -> None:
-    key = _cache_key(uid, appid, group_id)
-    _last_lyric_cache.pop(key, None)
+_kw_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
 
 
 def _search_cache_get(uid: str, appid: str, group_id: str = '') -> dict[str, Any] | None:
@@ -283,13 +280,22 @@ def _lyric_line_text(sec: float, text: str, bundle: LyricBundle, *, show_trans: 
     return line
 
 
-def build_lyric_markdown(bundle: LyricBundle, song_name: str = '', *, max_chars: int = _LYRIC_MAX_CHARS) -> str:
-    """构建单条完整歌词 Markdown（不再分页），超长自动截断到安全长度。"""
-    title_base = _clean_show(song_name) or '未知'
-    lyric_title = f'{title_base} · 歌词'
+def _song_cover_url(data: dict[str, Any]) -> str:
+    cover = str(data.get('cover') or '').strip()
+    if cover.startswith(('http://', 'https://')):
+        return cover
+    return _album_cover_url(str(data.get('album_mid') or ''))
+
+
+def build_lyric_lrc_text(
+    bundle: LyricBundle,
+    *,
+    max_chars: int = _LYRIC_MAX_CHARS,
+) -> str:
+    """LRC 纯文本（用于代码块内）。"""
     lines = bundle.lines
     if not lines:
-        return f'### {lyric_title}\n\n```\n暂无歌词\n```'
+        return '暂无歌词'
     show_trans = can_show_trans_in_markdown(bundle)
     body: list[str] = []
     used = 0
@@ -305,37 +311,62 @@ def build_lyric_markdown(bundle: LyricBundle, song_name: str = '', *, max_chars:
     if truncated:
         tail = f'\n……（歌词过长已截断，共 {len(lines)} 行，仅显示前 {len(body)} 行）'
         code = (code + tail)[:max_chars]
-    return f'### {lyric_title}\n\n```\n{code}\n```'
+    return code
+
+
+def format_play_detail_markdown(
+    data: dict[str, Any],
+    lyric_bundle: LyricBundle | None = None,
+    *,
+    show_lyrics: bool = True,
+    lyrics_hint: str = '',
+    music_url: str = '',
+) -> str:
+    """播放详情：封面 + 歌手/专辑 + LRC 代码块（单条消息）。"""
+    song = _clean_show(str(data.get('song') or ''))
+    singer = _clean_show(str(data.get('singer') or ''))
+    album = _clean_show(str(data.get('album_name') or ''))
+    cover = _song_cover_url(data)
+    cover_md = _cover_image_md(cover, song, size=_PLAY_COVER_SIZE)
+
+    lines: list[str] = [f'## 🎵 {song}', '──────────────']
+    if cover_md:
+        lines.extend(['', cover_md])
+    lines.extend([
+        '',
+        f'**歌手**：{singer}',
+        f'**专辑**：{album or "未知"}',
+    ])
+    bundle = lyric_bundle or LyricBundle()
+    if show_lyrics and bundle.lines:
+        lines.extend(['', f'```\n{build_lyric_lrc_text(bundle)}\n```'])
+    elif lyrics_hint:
+        lines.extend(['', lyrics_hint])
+    elif bundle.lines and not show_lyrics:
+        lines.extend(['', '（歌词已关闭，发送 `#歌词开` 可在播放时显示歌词）'])
+    if music_url:
+        lines.extend(['', f'[备用播放链接]({music_url})'])
+    return '\n'.join(lines)
+
+
+def build_lyric_markdown(bundle: LyricBundle, song_name: str = '', *, max_chars: int = _LYRIC_MAX_CHARS) -> str:
+    """兼容旧调用：仅歌词代码块。"""
+    title_base = _clean_show(song_name) or '未知'
+    body = build_lyric_lrc_text(bundle, max_chars=max_chars)
+    return f'### {title_base} · 歌词\n\n```\n{body}\n```'
 
 
 def store_last_lyric(uid: str, appid: str, group_id: str, song: str, markdown: str) -> None:
-    key = _cache_key(uid, appid, group_id)
-    if key in _last_lyric_cache:
-        _last_lyric_cache.move_to_end(key)
-    _last_lyric_cache[key] = {
-        'song': song,
-        'markdown': markdown,
-        'stored_at': time.monotonic(),
-    }
-    if len(_last_lyric_cache) > _CACHE_CAP:
-        _last_lyric_cache.popitem(last=False)
+    """已废弃：歌词并入播放详情，保留空实现避免旧代码引用报错。"""
+    return
 
 
 def get_last_lyric(uid: str, appid: str, group_id: str) -> dict[str, Any] | None:
-    key = _cache_key(uid, appid, group_id)
-    info = _last_lyric_cache.get(key)
-    if not info:
-        return None
-    stored_at = info.get('stored_at')
-    if not isinstance(stored_at, (int, float)) or time.monotonic() - stored_at > _SEARCH_TTL_SEC:
-        _last_lyric_cache.pop(key, None)
-        return None
-    _last_lyric_cache.move_to_end(key)
-    return {'song': info.get('song') or '', 'markdown': info.get('markdown') or ''}
+    return None
 
 
 async def search_songs(keyword: str) -> list[dict[str, Any]]:
-    kw = (keyword or '').strip()
+    kw = re.sub(r'\s+', ' ', (keyword or '').strip())
     if not kw:
         return []
     cached = _kw_cache_get(kw)
@@ -409,7 +440,7 @@ def format_search_list(
     lines = [
         f'## 🎵 QQ音乐 · 「{keyword}」',
         '──────────────',
-        '点击蓝字播放（`#听1` / `#点歌 1`），列表 **3 分钟内**有效：',
+        '点击蓝字播放（`#听1`），列表 **3 分钟内**有效：',
         '',
     ]
     for i, s in enumerate(songs, 1):
@@ -450,30 +481,25 @@ def format_help_markdown() -> str:
     return (
         '## 🎵 音乐点歌\n'
         '──────────────\n'
-        '- `#点歌 歌名` 搜索列表\n'
-        '- `#听1` / `#点歌 1` 播放（按个人设置自动发歌词）\n'
-        '- `#歌词` 手动查看最近歌词\n'
-        '- `#歌词开` / `#歌词关` / `#歌词开关` 个人歌词显示\n'
-        '- 搜索列表与歌词缓存 **3 分钟**后失效，需重新 `#点歌`\n'
+        '- `#点歌 歌名` 搜索列表（纯数字歌名如 2077 也按歌名搜索）\n'
+        '- `#听1` 播放列表第 1 首（含封面、歌手、专辑与 LRC 歌词）\n'
+        '- `#歌词开` / `#歌词关` / `#歌词开关` 控制播放时是否附带歌词\n'
+        '- `#群歌词开` / `#群歌词关` 群主/管理员控制本群歌词\n'
+        '- 搜索列表 **3 分钟**内有效，过期请重新 `#点歌`\n'
         '- 优先发语音条，过长时自动改为文件\n'
-
+        '- 音源：QQ音乐'
     )
 
 
 def search_buttons() -> list[list[dict[str, Any]]]:
     return [
         [
-            {'text': '听1', 'data': '#听1', 'type': 2, 'enter': True, 'style': 1},
-            {'text': '听2', 'data': '#听2', 'type': 2, 'enter': True, 'style': 1},
-            {'text': '听3', 'data': '#听3', 'type': 2, 'enter': True, 'style': 1},
-            {'text': '听4', 'data': '#听4', 'type': 2, 'enter': True, 'style': 1},
-        ],
-        [
-            {'text': '再点一首', 'data': '#点歌', 'type': 2, 'enter': False, 'style': 2},
+            {'text': '再搜一首', 'data': '#点歌', 'type': 2, 'enter': False, 'style': 2},
+            {'text': '歌词开关', 'data': 'qm:lyric:toggle', 'type': 1, 'style': 2},
             {'text': '音乐帮助', 'data': '#音乐帮助', 'type': 2, 'enter': True, 'style': 4},
         ],
         [
-            {'text': '歌词开关', 'data': 'qm:lyric:toggle', 'type': 1, 'style': 1},
+            {'text': '群歌词开关', 'data': 'qm:group_lyric:toggle', 'type': 1, 'style': 3},
         ],
     ]
 
@@ -481,11 +507,13 @@ def search_buttons() -> list[list[dict[str, Any]]]:
 def play_buttons() -> list[list[dict[str, Any]]]:
     return [
         [
-            {'text': '再点一首', 'data': '#点歌', 'type': 2, 'enter': False, 'style': 1},
-            {'text': '搜晴天', 'data': '#点歌 晴天', 'type': 2, 'enter': True, 'style': 2},
+            {'text': '再搜一首', 'data': '#点歌', 'type': 2, 'enter': False, 'style': 1},
+            {'text': '点歌稻香', 'data': '#点歌 稻香', 'type': 2, 'enter': True, 'style': 2},
         ],
         [
-            {'text': '歌词开关', 'data': 'qm:lyric:toggle', 'type': 1, 'style': 1},
+            {'text': '歌词开关', 'data': 'qm:lyric:toggle', 'type': 1, 'style': 2},
+            {'text': '群歌词开关', 'data': 'qm:group_lyric:toggle', 'type': 1, 'style': 3},
+            {'text': '音乐帮助', 'data': '#音乐帮助', 'type': 2, 'enter': True, 'style': 4},
         ],
     ]
 
@@ -493,11 +521,11 @@ def play_buttons() -> list[list[dict[str, Any]]]:
 def help_buttons() -> list[list[dict[str, Any]]]:
     return [
         [
-            {'text': '点歌晴天', 'data': '#点歌 晴天', 'type': 2, 'enter': True, 'style': 1},
             {'text': '点歌稻香', 'data': '#点歌 稻香', 'type': 2, 'enter': True, 'style': 1},
+            {'text': '音乐帮助', 'data': '#音乐帮助', 'type': 2, 'enter': True, 'style': 4},
         ],
         [
-            {'text': '歌词开关', 'data': 'qm:lyric:toggle', 'type': 1, 'style': 1},
-            {'text': '音乐帮助', 'data': '#音乐帮助', 'type': 2, 'enter': True, 'style': 4},
+            {'text': '歌词开关', 'data': 'qm:lyric:toggle', 'type': 1, 'style': 2},
+            {'text': '群歌词开关', 'data': 'qm:group_lyric:toggle', 'type': 1, 'style': 3},
         ],
     ]
