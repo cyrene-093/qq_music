@@ -37,7 +37,7 @@ qq_music/
 ├── settings.py / web_panel.py / panel.html
 ├── data/settings.json.example · data/README.md
 ├── assets/bg/          # 面板日/夜背景图
-├── LICENSE · README.md · USAGE.md · PUBLISH.md · .gitignore
+├── LICENSE · README.md · USAGE.md · .gitignore
 ```
 
 运行时会生成 `data/settings.json` 等，请勿把真实配置提交到仓库。
