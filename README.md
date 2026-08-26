@@ -6,7 +6,7 @@
 
 | 项目 | 说明 |
 | --- | --- |
-| 版本 | 1.9.4 |
+| 版本 | 1.9.5 |
 | 许可 | [MIT](./LICENSE) |
 | 运行环境 | ElainaBot v2 |
 | 额外依赖 | 无 |
@@ -37,7 +37,7 @@ qq_music/
 ├── settings.py / web_panel.py / panel.html
 ├── data/settings.json.example · data/README.md
 ├── assets/bg/          # 面板日/夜背景图
-├── LICENSE · README.md · USAGE.md · .gitignore
+├── LICENSE · README.md · USAGE.md · PUBLISH.md · .gitignore
 ```
 
 运行时会生成 `data/settings.json` 等，请勿把真实配置提交到仓库。
