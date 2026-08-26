@@ -43,7 +43,6 @@ qq_music/
 ├── LICENSE
 ├── README.md
 ├── USAGE.md
-├── PUBLISH.md
 ├── .gitignore
 ├── assets/
 │   └── bg/                      # 面板日/夜背景（可选）
@@ -55,6 +54,6 @@ qq_music/
     └── settings.json.example    # 空白配置示例
 ```
 
-运行时会在 `data/` 生成 `settings.json`、`group_remarks.json` 等，请勿把真实配置提交到仓库。
+运行时会在 `data/` 生成 `settings.json`、`group_remarks.json` 等。
 
 各文件职责详见 [USAGE.md](./USAGE.md) 第 9 节。
