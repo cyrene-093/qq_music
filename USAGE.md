@@ -21,7 +21,6 @@
 | `data/settings.json` | **运行时数据**（统计、记录、用户/群设置），首次运行自动创建 |
 | `data/group_remarks.json` | 群备注（QQ 群号、显示名），按需生成 |
 
-上传插件市场时只需 **`qq_music` 目录内代码与资源**；本地测试产生的 `data/settings.json` 记录可保留在服务器，不必打进发布包（已提供空的 `settings.json.example`）。
 
 ## 聊天指令
 
@@ -102,4 +101,4 @@
 
 ## 版本
 
-当前插件版本见 `main.py` 内 `__plugin_meta__.version`。
+1.5.0
