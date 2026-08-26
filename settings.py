@@ -15,7 +15,12 @@ _RECORD_CAP = 500
 _TOP_SONGS = 20
 
 _DEFAULT = {
-    'global': {'show_lyrics': True},
+    'global': {
+        'show_lyrics': True,
+        'music_source': 'aa_qq',
+        'custom_source_url': '',
+        'qq_cookie': '',
+    },
     'stats': {
         'searches': 0,
         'plays': 0,
@@ -57,22 +62,55 @@ class MusicSettingsStore:
                     for key, val in base.items():
                         if key not in raw:
                             raw[key] = val
-                        elif isinstance(val, dict) and not isinstance(raw[key], dict):
+                        elif isinstance(val, dict) and isinstance(raw.get(key), dict):
+                            for k2, v2 in val.items():
+                                if k2 not in raw[key]:
+                                    raw[key][k2] = v2
+                        elif isinstance(val, dict) and not isinstance(raw.get(key), dict):
                             raw[key] = val
-                        elif isinstance(val, list) and not isinstance(raw[key], list):
+                        elif isinstance(val, list) and not isinstance(raw.get(key), list):
                             raw[key] = val
                     self._data = raw
+                    self._migrate_default_source()
+                    self._migrate_clear_cookie()
                     return
             except Exception:
                 log.exception('读取点歌设置失败 %s', self.path)
         self._data = json.loads(json.dumps(_DEFAULT))
 
+    def _migrate_default_source(self) -> None:
+        g = self._global()
+        if g.get('_opensource_default_applied'):
+            return
+        sid = str(g.get('music_source') or '').strip()
+        # 开源默认：第三方搜播一体；不再把用户强制迁到官方搜
+        if sid in ('', 'official_qq') and not g.get('_keep_official_source'):
+            g['music_source'] = 'aa_qq'
+        g['_opensource_default_applied'] = True
+        g.pop('_official_default_applied', None)
+        try:
+            self.save()
+        except Exception:
+            log.debug('迁移默认歌源失败', exc_info=True)
+
+    def _migrate_clear_cookie(self) -> None:
+        """面板已移除 Cookie 配置，清空本地票据避免误用与误传。"""
+        g = self._global()
+        if g.get('_cookie_ui_removed'):
+            return
+        g['qq_cookie'] = ''
+        g['_cookie_ui_removed'] = True
+        try:
+            self.save()
+        except Exception:
+            log.debug('清理 Cookie 字段失败', exc_info=True)
+
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps(self._data, ensure_ascii=False, indent=2),
-            encoding='utf-8',
-        )
+        text = json.dumps(self._data, ensure_ascii=False, indent=2)
+        tmp = self.path.with_suffix(self.path.suffix + '.tmp')
+        tmp.write_text(text, encoding='utf-8')
+        os.replace(tmp, self.path)
 
     def _global(self) -> dict[str, Any]:
         g = self._data.get('global')
@@ -205,6 +243,85 @@ class MusicSettingsStore:
         self.save()
         return bool(value)
 
+    def get_custom_source_url(self) -> str:
+        return str(self._global().get('custom_source_url') or '').strip()
+
+    def set_custom_source_url(self, url: str) -> str:
+        val = str(url or '').strip()
+        self._global()['custom_source_url'] = val
+        self.save()
+        return val
+
+    def get_qq_cookie(self) -> str:
+        from plugins.qq_music.official_qq import parse_cookie
+
+        return parse_cookie(str(self._global().get('qq_cookie') or ''))
+
+    def set_qq_cookie(self, raw: str) -> str:
+        from plugins.qq_music.official_qq import parse_cookie
+
+        val = parse_cookie(raw)
+        self._global()['qq_cookie'] = val
+        try:
+            from plugins.qq_music.official_qq import set_play_restricted
+
+            set_play_restricted(False)
+        except Exception:
+            pass
+        self.save()
+        return val
+
+    def cookie_status(self) -> dict[str, Any]:
+        from plugins.qq_music.official_qq import cookie_mask, cookie_music_key
+
+        raw = self.get_qq_cookie()
+        return {
+            'has_cookie': bool(raw),
+            'has_ticket': bool(cookie_music_key(raw)) if raw else False,
+            'uin_mask': cookie_mask(raw) if raw else '',
+        }
+
+    def get_music_source(self, group_id: str = '') -> str:
+        gid = str(group_id or '').strip()
+        if gid:
+            blob = self._groups().get(gid)
+            if isinstance(blob, dict):
+                sid = str(blob.get('music_source') or '').strip()
+                if sid:
+                    return sid
+        sid = str(self._global().get('music_source') or '').strip()
+        return sid or 'aa_qq'
+
+    def get_group_music_source(self, group_id: str) -> str | None:
+        blob = self._groups().get(str(group_id or '').strip())
+        if isinstance(blob, dict):
+            sid = str(blob.get('music_source') or '').strip()
+            if sid:
+                return sid
+        return None
+
+    def set_music_source(self, source_id: str, group_id: str = '') -> str:
+        from plugins.qq_music.sources import get_source, known_source_ids
+
+        sid = str(source_id or '').strip() or 'aa_qq'
+        gid = str(group_id or '').strip()
+        if gid:
+            if sid in ('', 'follow', 'global', '跟随', '跟随全局'):
+                blob = self.touch_group(gid)
+                blob.pop('music_source', None)
+                self.save()
+                return self.get_music_source('')
+            if sid not in known_source_ids(self.get_custom_source_url()):
+                sid = get_source(sid, self.get_custom_source_url()).id
+            self.touch_group(gid)['music_source'] = sid
+            self.save()
+            return sid
+        if sid not in known_source_ids(self.get_custom_source_url()):
+            sid = get_source(sid, self.get_custom_source_url()).id
+        self._global()['music_source'] = sid
+        self.save()
+        return sid
+
     # ---------- 统计与记录 ----------
 
     @staticmethod
@@ -229,7 +346,9 @@ class MusicSettingsStore:
         uid: str = '',
         gid: str = '',
         nickname: str = '',
+        scope: str = 'personal',
     ) -> None:
+        scope = 'group' if scope == 'group' else 'personal'
         self._inc(self._stats(), 'searches')
         if appid or uid:
             self._inc(self.touch_user(appid, uid, nickname), 'searches')
@@ -238,6 +357,7 @@ class MusicSettingsStore:
         self._append_record({
             'ts': int(time.time()),
             'type': 'search',
+            'scope': scope,
             'appid': appid,
             'uid': uid,
             'gid': gid,
@@ -257,7 +377,9 @@ class MusicSettingsStore:
         nickname: str = '',
         cover: str = '',
         url: str = '',
+        scope: str = 'personal',
     ) -> None:
+        scope = 'group' if scope == 'group' else 'personal'
         self._inc(self._stats(), 'plays')
         if appid or uid:
             self._inc(self.touch_user(appid, uid, nickname), 'plays')
@@ -277,6 +399,7 @@ class MusicSettingsStore:
         self._append_record({
             'ts': int(time.time()),
             'type': 'play',
+            'scope': scope,
             'appid': appid,
             'uid': uid,
             'gid': gid,
@@ -301,7 +424,14 @@ class MusicSettingsStore:
         records = self._records()
         if rec_type in ('search', 'play'):
             records = [r for r in records if r.get('type') == rec_type]
-        return records[-limit:][::-1]
+        out: list[dict[str, Any]] = []
+        for rec in records[-limit:][::-1]:
+            if not isinstance(rec, dict):
+                continue
+            item = dict(rec)
+            item['scope'] = 'group' if item.get('scope') == 'group' else 'personal'
+            out.append(item)
+        return out
 
     @staticmethod
     def _qq_group_avatar(qq: str) -> str:
@@ -764,6 +894,7 @@ class MusicSettingsStore:
                 'last_seen': blob.get('last_seen'),
                 'searches': int(blob.get('searches', 0) or 0),
                 'plays': int(blob.get('plays', 0) or 0),
+                'music_source': str(blob.get('music_source') or ''),
             })
         group_list.sort(key=lambda x: int(x.get('last_seen') or 0), reverse=True)
 
@@ -780,8 +911,13 @@ class MusicSettingsStore:
             })
         top.sort(key=lambda x: x['count'], reverse=True)
 
+        pub_global = {
+            'show_lyrics': bool(self._global().get('show_lyrics', True)),
+            'music_source': str(self._global().get('music_source') or 'aa_qq'),
+            'custom_source_url': str(self._global().get('custom_source_url') or ''),
+        }
         return {
-            'global': dict(self._global()),
+            'global': pub_global,
             'stats': dict(self._stats()),
             'users': user_list,
             'groups': group_list,

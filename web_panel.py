@@ -10,8 +10,7 @@ import os
 
 from aiohttp import web
 
-from core.plugin.decorators import on_load, on_unload
-from core.plugin.web_pages import register_page, register_route, unregister_page
+from core.plugin.web_pages import register_route
 
 from .settings import get_store
 
@@ -74,10 +73,20 @@ async def api_records(request):
 
 @register_route('GET', '/api/ext/qq_music/settings', auth=True)
 async def api_get_settings(request):
+    from plugins.qq_music.sources import get_source, list_sources
+
     store = get_store()
+    sid = store.get_music_source()
+    custom = store.get_custom_source_url()
+    src = get_source(sid, custom)
     return web.json_response({
         'ok': True,
         'show_lyrics': store.get_global_show_lyrics(),
+        'music_source': src.id,
+        'music_source_name': src.name,
+        'music_source_note': src.note,
+        'custom_source_url': custom,
+        'sources': list_sources(custom),
     })
 
 
@@ -104,10 +113,32 @@ async def api_get_group_settings(request):
 
 @register_route('POST', '/api/ext/qq_music/settings', auth=True)
 async def api_post_settings(request):
+    from plugins.qq_music.sources import get_source, list_sources, resolve_source
+
     body = await _json_body(request)
-    show = body.get('show_lyrics', True)
-    val = get_store().set_global_show_lyrics(bool(show))
-    return web.json_response({'ok': True, 'show_lyrics': val})
+    store = get_store()
+    if 'custom_source_url' in body:
+        store.set_custom_source_url(str(body.get('custom_source_url') or ''))
+    if 'music_source' in body:
+        raw = str(body.get('music_source') or '').strip()
+        src = resolve_source(raw, store.get_custom_source_url())
+        if not src:
+            return web.json_response({'ok': False, 'error': f'未知歌源：{raw}'}, status=400)
+        store.set_music_source(src.id)
+    if 'show_lyrics' in body:
+        store.set_global_show_lyrics(bool(body.get('show_lyrics')))
+    sid = store.get_music_source()
+    custom = store.get_custom_source_url()
+    src = get_source(sid, custom)
+    return web.json_response({
+        'ok': True,
+        'show_lyrics': store.get_global_show_lyrics(),
+        'music_source': src.id,
+        'music_source_name': src.name,
+        'music_source_note': src.note,
+        'custom_source_url': custom,
+        'sources': list_sources(custom),
+    })
 
 
 @register_route('POST', '/api/ext/qq_music/user_settings', auth=True)
@@ -134,22 +165,36 @@ async def api_post_user_settings(request):
 
 @register_route('POST', '/api/ext/qq_music/group_settings', auth=True)
 async def api_post_group_settings(request):
+    from plugins.qq_music.sources import known_source_ids, resolve_source
+
     body = await _json_body(request)
     gid = str(body.get('group_id') or '').strip()
     if not gid:
         return web.json_response({'ok': False, 'error': 'group_id 不能为空'}, status=400)
     store = get_store()
     name = str(body.get('name') or '')
-    raw = body.get('show_lyrics')
-    if raw is None:
-        effective = store.set_group_show_lyrics(gid, None, name)
+    store.touch_group(gid, name)
+    if 'music_source' in body:
+        sid = str(body.get('music_source') or '').strip()
+        if sid and sid not in ('follow', 'global', '跟随', '跟随全局'):
+            custom = store.get_custom_source_url()
+            if sid not in known_source_ids(custom) and not resolve_source(sid, custom):
+                return web.json_response({'ok': False, 'error': f'未知歌源：{sid}'}, status=400)
+        store.set_music_source(sid or 'follow', gid)
+    if 'show_lyrics' in body:
+        raw = body.get('show_lyrics')
+        if raw is None:
+            effective = store.set_group_show_lyrics(gid, None, name)
+        else:
+            effective = store.set_group_show_lyrics(gid, bool(raw), name)
     else:
-        effective = store.set_group_show_lyrics(gid, bool(raw), name)
+        effective = store.should_show_lyrics('', '', gid)
     blob = store._groups().get(gid, {})
     return web.json_response({
         'ok': True,
         'show_lyrics': blob.get('show_lyrics'),
         'effective_show_lyrics': effective,
+        'music_source': blob.get('music_source') or '',
     })
 
 

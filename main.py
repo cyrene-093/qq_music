@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import logging
-
 import os
 
+from core.base.logger import PLUGIN, get_logger
 from core.message.event import INTERACTION_CREATE
 from core.plugin.decorators import handler, on_load, on_unload
-from core.plugin.web_pages import register_page, register_route
+from core.plugin.web_pages import register_page, unregister_page
 
 from plugins.qq_music.settings import get_store
 from plugins.qq_music.service import (
@@ -17,21 +16,40 @@ from plugins.qq_music.service import (
     PLAY_ERR_EXPIRED,
     aclose,
     fetch_play_with_lyric,
+    format_group_song_help,
     format_help_markdown,
+    format_other_user_prompt,
     format_play_detail_markdown,
     format_search_list,
+    group_play_buttons,
+    group_search_buttons,
+    has_active_search,
     help_buttons,
+    other_user_buttons,
+    parse_list_index,
+    peek_peer_search,
+    peer_prompt_keyword,
     play_buttons,
     search_buttons,
     search_songs,
+    store_group_search,
     store_search,
     _song_cover_url,
 )
+from plugins.qq_music.sources import (
+    format_source_help,
+    get_source,
+    resolve_source,
+    source_switch_buttons,
+)
 
-# Web 扩展面板（须加载本目录 web_panel 以注册 GET user/group/series 路由）
-from importlib import import_module
+# 必须导入：注册 /api/ext/qq_music/* 路由（装饰器在 import 时生效）
+try:
+    from . import web_panel as _web_panel  # noqa: F401
+except Exception:
+    from importlib import import_module
 
-import_module(f'{__package__}.web_panel')
+    import_module('plugins.qq_music.web_panel')
 
 _PAGE_KEY = 'qq-music-panel-v2'
 _PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,12 +57,55 @@ _PANEL_HTML = os.path.join(_PLUGIN_DIR, 'panel.html')
 
 __plugin_meta__ = {
     'name': 'QQ音乐点歌',
-    'description': 'QQ音乐点歌：搜索/音源播放，播放消息含封面与LRC歌词，歌词开关（个人/群/全局），Web管理面板（统计/记录/用户/群控制）',
-    'version': '1.5.0',
+    'author': 'cyrene-093',
+    'description': 'QQ 点歌：个人/群点歌、多歌源、LRC、Web 面板。第三方音源，请遵守版权，建议自用娱乐。',
+    'version': '1.9.4',
     'license': 'MIT',
+    # 上架市场前改成你的真实仓库地址
+    'github': '',
 }
 
-log = logging.getLogger('plugins.qq_music')
+log = get_logger(PLUGIN, 'qq_music')
+
+
+def _ensure_web_page(*, quiet: bool = False) -> bool:
+    """注册侧边栏扩展页。import 时与 on_load 各调一次，避免热重载竞态丢注册。"""
+    if os.path.isfile(_PANEL_HTML):
+        register_page(
+            key=_PAGE_KEY,
+            label='QQ音乐',
+            source='plugin',
+            source_name='qq_music',
+            icon='music',
+            html_file=_PANEL_HTML,
+        )
+        if not quiet:
+            log.info('QQ音乐 Web 面板已注册 key=%s file=%s', _PAGE_KEY, _PANEL_HTML)
+        return True
+    # 缺 panel.html 时仍注册占位页，避免 iframe 只显示「页面不存在」JSON
+    tip = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8"><title>QQ音乐</title></head>'
+        '<body style="font-family:sans-serif;padding:24px;line-height:1.6">'
+        '<h2>panel.html 缺失</h2>'
+        '<p>请完整安装 <code>qq_music</code> 插件目录（需包含 <code>panel.html</code>），'
+        '然后在「插件模块」中重载本插件，并强制刷新浏览器（Ctrl+F5）。</p>'
+        f'<p style="color:#888">查找路径：{_PANEL_HTML}</p>'
+        '</body></html>'
+    )
+    register_page(
+        key=_PAGE_KEY,
+        label='QQ音乐',
+        source='plugin',
+        source_name='qq_music',
+        icon='music',
+        html=tip,
+    )
+    log.error('QQ音乐 panel.html 不存在: %s', _PANEL_HTML)
+    return False
+
+
+# 入口加载时立即注册，不单独依赖 on_load（热重载竞态下可缩短「页面不存在」窗口）
+_ensure_web_page(quiet=True)
 
 _P = r'(?:#|＃)?'
 _STRIP_TBL = str.maketrans('', '', '"\'<>&*_~`[](){}\\\\/:')
@@ -131,13 +192,14 @@ async def _reply_md(
     )
 
 
-async def _send_music_audio(event, music_url: str, data: dict, caption: str) -> None:
+async def _send_music_audio(event, music_url: str, data: dict, caption: str, buttons=None) -> None:
     """优先语音条；失败（常见为时长超限）则改发文件。"""
+    btns = buttons if buttons is not None else play_buttons()
     if not music_url or not music_url.startswith(('http://', 'https://')):
         await _reply_md(
             event,
             '音频链接无效，请重新点歌或换一首试试。',
-            buttons=play_buttons(),
+            buttons=btns,
         )
         return
 
@@ -173,45 +235,72 @@ async def _send_music_audio(event, music_url: str, data: dict, caption: str) -> 
         f'• 音频格式不支持\n'
         f'• 网络传输异常\n\n'
         f'请直接打开备用播放链接：\n{music_url}',
-        buttons=play_buttons(),
+        buttons=btns,
     )
 
 
-async def _play_song(event, index: int) -> None:
+async def _play_song(event, index: int, *, shared: bool = False) -> None:
     _touch_user(event)
     uid, appid, gid = _session_uid(event), _appid(event), _gid(event)
     store = get_store()
+    btns = group_play_buttons() if shared else play_buttons()
+    search_cmd = '#群点歌 歌名' if shared else '#点歌 歌名'
+    listen_cmd = '#群听1' if shared else '#听1'
     try:
-        data, lyric_bundle, err = await fetch_play_with_lyric(uid, appid, gid, index)
+        data, lyric_bundle, err = await fetch_play_with_lyric(
+            uid, appid, gid, index, shared=shared,
+        )
     except Exception:
         log.exception('获取音源失败')
-        await _reply_md(event, '网络请求超时，请稍后重试。', buttons=play_buttons())
+        await _reply_md(event, '网络请求超时，请稍后重试。', buttons=btns)
         return
     if not data:
         if err == PLAY_ERR_EXPIRED:
-            msg = '搜索列表已过期（仅保留 3 分钟），请重新 `#点歌 歌名` 再 `#听1`。'
+            if not shared:
+                peer = peek_peer_search(uid, appid, gid)
+                if peer:
+                    kw = peer_prompt_keyword(peer, index)
+                    await _reply_md(
+                        event,
+                        format_other_user_prompt(kw, group_chat=bool(gid)),
+                        buttons=other_user_buttons(kw),
+                    )
+                    return
+                if has_active_search(uid, appid, gid, shared=True):
+                    await _reply_md(
+                        event,
+                        f'`#听{index}` 是**个人**点歌。本群有共享列表，请发送 `#群听{index}`；'
+                        '或先 `#点歌 歌名` 生成你自己的列表。',
+                        buttons=group_search_buttons(),
+                    )
+                    return
+            msg = f'搜索列表已过期（仅保留 3 分钟），请重新 `{search_cmd}` 再 `{listen_cmd}`。'
         elif err == PLAY_ERR_BAD_INDEX:
-            msg = '序号无效，请使用列表中的 1–10，或重新 `#点歌 歌名`。'
+            msg = f'序号无效，请使用列表中的 1–10，或重新 `{search_cmd}`。'
         elif err == PLAY_ERR_API:
-            msg = '获取歌曲失败，请稍后重试或重新 `#点歌` 搜索。'
+            msg = (
+                f'获取歌曲失败。可发送 `#歌源` 切换其他音源后重新 `{search_cmd}`。'
+            )
         else:
-            msg = '无法播放，请重新 `#点歌 歌名` 后再试。'
+            msg = f'无法播放，请重新 `{search_cmd}` 后再试。'
         await _reply_md(event, msg, buttons=help_buttons())
         return
     music_url = str(data.get('music') or '').strip()
     if not music_url:
-        await _reply_md(event, '未获取到歌曲链接，请换一首试试。', buttons=play_buttons())
+        await _reply_md(event, '未获取到歌曲链接，请换一首试试。', buttons=btns)
         return
 
     store.record_play(
         song=str(data.get('song') or ''),
         singer=str(data.get('singer') or ''),
+        keyword=str(data.get('_keyword') or ''),
         appid=appid,
         uid=uid,
         gid=gid,
         nickname=_nickname(event),
         cover=_song_cover_url(data),
         url=music_url,
+        scope='group' if shared else 'personal',
     )
     show_lyrics = store.should_show_lyrics(appid, uid, gid)
     lyrics_hint = ''
@@ -240,11 +329,11 @@ async def _play_song(event, index: int) -> None:
         ok = await _reply_md(
             event,
             detail_md,
-            buttons=play_buttons(),
+            buttons=btns,
             force_verify_image=has_cover,
         )
         if ok is False and has_cover:
-            await _reply_md(event, detail_md, buttons=play_buttons(), force_verify_image=False)
+            await _reply_md(event, detail_md, buttons=btns, force_verify_image=False)
     except Exception as e:
         log.warning('播放详情发送失败: %s', e)
     
@@ -258,35 +347,32 @@ async def _play_song(event, index: int) -> None:
     caption += '\nQQ音乐'
     
     try:
-        await _send_music_audio(event, music_url, data, caption)
+        await _send_music_audio(event, music_url, data, caption, buttons=btns)
     except Exception as e:
         log.exception('音频发送异常')
         await _reply_md(
             event,
             f'⚠️ 音频发送失败：{e}\n\n请直接打开备用播放链接：\n{music_url}',
-            buttons=play_buttons(),
+            buttons=btns,
         )
 
 
 @on_load
 async def _boot():
-    get_store()
-    # 注册 Web 扩展面板（与主动推送、工作流API 一致，在 main.py 的 on_load 中注册）
-    register_page(
-        key=_PAGE_KEY,
-        label='QQ音乐',
-        source='plugin',
-        source_name='qq_music',
-        icon='music',
-        html_file=_PANEL_HTML,
-    )
-    log.info('QQ音乐 Web 面板已注册 key=%s html=%s', _PAGE_KEY, _PANEL_HTML)
+    # 先挂页面，再初始化存储，避免 store 异常导致侧边栏页丢失
+    _ensure_web_page()
+    try:
+        get_store()
+    except Exception:
+        log.exception('初始化点歌设置失败')
 
 
 @on_unload
 async def _shutdown():
-    await aclose()
-    from core.plugin.web_pages import unregister_page
+    try:
+        await aclose()
+    except Exception:
+        log.debug('关闭 http 客户端失败', exc_info=True)
     unregister_page(_PAGE_KEY)
     log.info('QQ音乐 Web 面板已注销 key=%s', _PAGE_KEY)
 
@@ -297,7 +383,117 @@ async def cmd_music_help(event, match):
     await _reply_md(event, format_help_markdown(), buttons=help_buttons())
 
 
-@handler(rf'^{_P}点歌(?:\s+(.+))?$', name='#点歌', desc='搜索歌曲：#点歌 歌名', priority=25, block=True)
+def _can_switch_source(event) -> bool:
+    if _is_group_admin(event):
+        return True
+    return _is_bot_owner(event, _appid(event))
+
+
+@handler(rf'^{_P}(?:切换)?歌源\s*(.*)$', name='#歌源', desc='查看或切换点歌音源', priority=27, block=True)
+async def cmd_music_source(event, match):
+    _touch_user(event)
+    store = get_store()
+    gid = _gid(event)
+    custom = store.get_custom_source_url()
+    current = get_source(store.get_music_source(gid), custom)
+    arg = (match.group(1) or '').strip()
+    if not arg:
+        await _reply_md(
+            event,
+            format_source_help(current, group=bool(gid), custom_url=custom),
+            buttons=source_switch_buttons(custom),
+        )
+        return
+    if not _can_switch_source(event):
+        await _reply_md(
+            event,
+            '仅**群主/管理员/机器人主人**可切换歌源。当前：**' + current.name + '**',
+            buttons=source_switch_buttons(custom),
+        )
+        return
+    follow = arg.lower() in ('跟随', '跟随全局', 'global', 'follow', '默认全局')
+    if follow:
+        if not gid:
+            await _reply_md(event, '私聊没有群覆盖，请直接 `#歌源 1` 切换全局歌源。', buttons=source_switch_buttons(custom))
+            return
+        new_id = store.set_music_source('follow', gid)
+        src = get_source(new_id, custom)
+        await _reply_md(event, f'本群歌源已**跟随全局**：{src.name}', buttons=source_switch_buttons(custom))
+        return
+    src = resolve_source(arg, custom)
+    if not src:
+        await _reply_md(
+            event,
+            '未识别的歌源。请发送 `#歌源` 查看可用列表。',
+            buttons=source_switch_buttons(custom),
+        )
+        return
+    new_id = store.set_music_source(src.id, gid)
+    src = get_source(new_id, custom)
+    scope = '本群' if gid else '全局'
+    note = f'\n{src.note}' if src.note else ''
+    await _reply_md(event, f'{scope}歌源已切换为 **{src.name}**。{note}\n请重新 `#点歌` 生效。', buttons=source_switch_buttons(custom))
+
+
+async def _search_and_reply(event, keyword: str, *, shared: bool) -> None:
+    uid, appid, gid = _session_uid(event), _appid(event), _gid(event)
+    btns = group_search_buttons() if shared else search_buttons()
+    store = get_store()
+    src = get_source(store.get_music_source(gid), store.get_custom_source_url())
+    try:
+        songs = await search_songs(keyword, group_id=gid)
+        if not songs:
+            await _reply_md(event, f'未找到「{keyword}」相关歌曲。', buttons=help_buttons())
+            return
+        if shared:
+            store_group_search(
+                appid, gid, keyword, songs,
+                uid=uid, nickname=_nickname(event),
+            )
+        else:
+            store_search(uid, appid, gid, keyword, songs)
+        store.record_search(
+            keyword=keyword,
+            appid=appid,
+            uid=uid,
+            gid=gid,
+            nickname=_nickname(event),
+            scope='group' if shared else 'personal',
+        )
+        md = format_search_list(
+            songs, keyword, group_chat=bool(gid), shared=shared, source_name=src.name,
+        )
+        ok = await _reply_md(event, md, buttons=btns, force_verify_image=True)
+        if ok is False:
+            await _reply_md(event, md, buttons=btns, force_verify_image=False)
+    except Exception:
+        log.exception('点歌搜索失败')
+        await _reply_md(event, '网络请求超时，请稍后重试。', buttons=help_buttons())
+
+
+@handler(rf'^{_P}群点歌\s*(.*)$', name='#群点歌', desc='本群共享点歌：#群点歌 歌名', priority=26, block=True)
+async def cmd_group_song(event, match):
+    _touch_user(event)
+    gid = _gid(event)
+    if not gid:
+        await _reply_md(
+            event,
+            '群点歌仅限群聊使用；私聊请用 `#点歌 歌名`。',
+            buttons=help_buttons(),
+        )
+        return
+    arg = (match.group(1) or '').strip()
+    if not arg:
+        await _reply_md(event, format_group_song_help(), buttons=group_search_buttons())
+        return
+    idx = parse_list_index(arg)
+    if idx and has_active_search(_session_uid(event), _appid(event), gid, shared=True):
+        await _play_song(event, idx, shared=True)
+        return
+    await _search_and_reply(event, arg, shared=True)
+
+
+@handler(rf'^{_P}(?!群)点歌\s*(.*)$', name='#点歌', desc='个人搜索歌曲：#点歌 歌名', priority=25, block=True)
 async def cmd_song(event, match):
     _touch_user(event)
     arg = (match.group(1) or '').strip()
@@ -305,31 +501,28 @@ async def cmd_song(event, match):
         await _reply_md(event, format_help_markdown(), buttons=help_buttons())
         return
     uid, appid, gid = _session_uid(event), _appid(event), _gid(event)
-    try:
-        songs = await search_songs(arg)
-        if not songs:
-            await _reply_md(event, f'未找到「{arg}」相关歌曲。', buttons=help_buttons())
-            return
-        store_search(uid, appid, gid, arg, songs)
-        get_store().record_search(
-            keyword=arg,
-            appid=appid,
-            uid=uid,
-            gid=gid,
-            nickname=_nickname(event),
+    idx = parse_list_index(arg)
+    if idx and has_active_search(uid, appid, gid, shared=False):
+        await _play_song(event, idx, shared=False)
+        return
+    await _search_and_reply(event, arg, shared=False)
+
+
+@handler(rf'^{_P}群听(\d+)$', name='#群听N', desc='播放群点歌列表第 N 首，如 #群听1', priority=25, block=True)
+async def cmd_group_listen(event, match):
+    if not _gid(event):
+        await _reply_md(
+            event,
+            '群听仅限群聊使用；私聊请用 `#点歌` / `#听1`。',
+            buttons=help_buttons(),
         )
-        md = format_search_list(songs, arg, group_chat=bool(gid))
-        ok = await _reply_md(event, md, buttons=search_buttons(), force_verify_image=True)
-        if ok is False:
-            await _reply_md(event, md, buttons=search_buttons(), force_verify_image=False)
-    except Exception:
-        log.exception('点歌搜索失败')
-        await _reply_md(event, '网络请求超时，请稍后重试。', buttons=help_buttons())
+        return
+    await _play_song(event, int(match.group(1)), shared=True)
 
 
-@handler(rf'^{_P}听(\d+)$', name='#听N', desc='播放搜索结果第 N 首，如 #听1', priority=24, block=True)
+@handler(rf'^{_P}(?!群)听(\d+)$', name='#听N', desc='播放个人搜索结果第 N 首，如 #听1', priority=24, block=True)
 async def cmd_listen(event, match):
-    await _play_song(event, int(match.group(1)))
+    await _play_song(event, int(match.group(1)), shared=False)
 
 
 @handler(rf'^{_P}歌词开关$', name='#歌词开关', desc='切换个人歌词显示开关', priority=24, block=True)
@@ -464,6 +657,8 @@ def _is_bot_owner(event, appid: str = '') -> bool:
     name='群歌词开关按钮',
     desc='群主/管理员/机器人主人 一键开关本群歌词',
     event_types=[INTERACTION_CREATE],
+    priority=90,
+    block=True,
 )
 async def _on_group_lyric_button(event, match):
     _touch_user(event)
@@ -525,7 +720,14 @@ async def lyric_toggle_button(event, match):
     store = get_store()
     gid = str(getattr(event, 'group_id', '') or '').strip() or str(getattr(event, 'group_openid', '') or '').strip()
     if gid and store.group_lyrics_forced_off(gid):
-        await _reply_md(event, _GROUP_LYRIC_OFF_MSG, buttons=help_buttons())
+        if _is_group_admin(event) or _is_bot_owner(event, _resolve_appid(event, store)):
+            await _reply_md(
+                event,
+                '本群歌词已被关闭。群主/管理员请发送 `#群歌词开` 恢复，或在 Web 面板开启。',
+                buttons=help_buttons(),
+            )
+        else:
+            await _reply_md(event, _GROUP_LYRIC_OFF_MSG, buttons=help_buttons())
         return
     new_val = store.toggle_user_show_lyrics(
         _resolve_appid(event, store), _session_uid(event), _nickname(event)

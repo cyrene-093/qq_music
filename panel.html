@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <title>QQ 音乐点歌 · 管理面板</title>
@@ -112,6 +112,16 @@ body.theme-night .anime-bg-vignette{box-shadow:inset 0 0 100px rgba(0,0,0,0.45)}
 .btn-ghost{background:rgba(128,128,160,0.1);color:var(--text);border:1px solid var(--bd)}
 body.theme-night .btn-ghost{background:rgba(255,255,255,0.08);color:var(--tl)}
 .btn-ghost:hover{background:rgba(255,107,203,0.15);color:var(--text)}
+body.theme-day .btn-secondary{
+  background:rgba(29,78,216,0.12);color:#1d4ed8;border:1px solid rgba(29,78,216,0.28);
+}
+body.theme-day .btn-secondary:hover{background:rgba(29,78,216,0.18);color:#1e3a8a}
+body.theme-day .btn-danger{
+  background:rgba(190,18,60,0.1);color:#be123c;border:1px solid rgba(190,18,60,0.28);
+}
+body.theme-day .btn-danger:hover{background:rgba(190,18,60,0.16);color:#9f1239}
+body.theme-night .btn-secondary{color:#e0f2fe;background:rgba(56,189,248,0.22);border-color:rgba(125,211,252,0.4)}
+body.theme-night .btn-danger{color:#fecdd3;background:rgba(244,63,94,0.22);border-color:rgba(251,113,133,0.4)}
 .btn-sm{padding:5px 12px;font-size:12px;border-radius:8px}
 .quick{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px}
 .picker-wide{width:100%;min-width:0}
@@ -131,8 +141,18 @@ body.theme-night .btn-ghost{background:rgba(255,255,255,0.08);color:var(--tl)}
 .quick-card{border-radius:var(--r);padding:16px;margin-bottom:0}
 .quick-title{font-size:13px;font-weight:800;color:var(--pl);margin-bottom:12px;display:flex;align-items:center;gap:8px;text-shadow:var(--text-shadow)}
 .quick-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,107,203,0.5),transparent)}
-.picker{position:relative;z-index:60}
-.picker:focus-within{z-index:3000}
+.picker{position:relative;z-index:2}
+.picker:focus-within,.picker.is-open{z-index:80}
+.quick:has(.picker:focus-within),.quick:has(.picker.is-open),
+.quick-card:has(.picker:focus-within),.quick-card:has(.picker.is-open),
+.card:has(.picker:focus-within),.card:has(.picker.is-open),
+.filter:has(.picker:focus-within),.filter:has(.picker.is-open),
+.top-actions:has(.picker:focus-within),.top-actions:has(.picker.is-open),
+.panel:has(.picker:focus-within),.panel:has(.picker.is-open){
+  position:relative;z-index:1600;
+}
+.topbar:has(.picker:focus-within),.topbar:has(.picker.is-open){z-index:1800}
+.quick-card,.card,.filter,.top-actions,.topbar{overflow:visible}
 .picker input{
   width:100%;padding:10px 34px 10px 14px;border-radius:10px;font-size:13px;font-weight:600;
   background:var(--glass-input);border:1px solid var(--bd);outline:none;color:var(--text);transition:all .2s;
@@ -152,6 +172,10 @@ body.theme-night .btn-ghost{background:rgba(255,255,255,0.08);color:var(--tl)}
   background:var(--glass-strong);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bd);box-shadow:var(--sh);
 }
 .pick-list.open{display:block}
+.pick-list.pick-portal{
+  position:fixed;right:auto;z-index:10050;
+  box-shadow:0 16px 40px rgba(8,10,28,0.45),var(--sh);
+}
 .pick-empty{padding:14px;font-size:12px;color:var(--tl);text-align:center}
 .pick-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--bd)}
 .pick-item:last-child{border-bottom:0}
@@ -203,6 +227,12 @@ tbody tr:last-child td{border-bottom:0}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
 .b-search{background:rgba(107,197,255,0.2);color:#9dd4ff;border:1px solid rgba(107,197,255,0.3)}
 .b-play{background:rgba(255,107,203,0.2);color:#ffb8e0;border:1px solid rgba(255,107,203,0.3)}
+.b-scope-group{background:rgba(107,197,255,0.22);color:#7ec8ff;border:1px solid rgba(107,197,255,0.4)}
+.b-scope-personal{background:rgba(168,85,247,0.22);color:#d8b4fe;border:1px solid rgba(168,85,247,0.4)}
+body.theme-day .b-scope-group{color:#1d4ed8;background:rgba(37,99,235,0.12);border-color:rgba(37,99,235,0.28)}
+body.theme-day .b-scope-personal{color:#7c3aed;background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.28)}
+body.theme-day .b-search{color:#1d4ed8;background:rgba(37,99,235,0.12)}
+body.theme-day .b-play{color:#a21caf;background:rgba(168,85,247,0.12)}
 .empty{text-align:center;padding:36px;color:var(--tl);font-weight:600}
 .rank{display:flex;flex-direction:column;gap:10px}
 .rank-item{
@@ -232,6 +262,48 @@ body.theme-day .filter select option{background:#fff;color:var(--text)}
 body.theme-night .filter select option{background:#1a1030;color:#fff}
 .filter input:focus,.filter select:focus{border-color:rgba(255,107,203,0.5);box-shadow:0 0 0 3px rgba(255,107,203,0.12)}
 .chart-sel{padding:6px 12px;border:1px solid var(--bd);border-radius:10px;font-size:12px;font-weight:600;color:var(--text);background:var(--glass-input);outline:none;cursor:pointer}
+.cookie-status,.source-status{margin-left:auto;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--bd);color:var(--tl)}
+.cookie-status.is-on,.source-status.is-on{color:#6ee7b7;border-color:rgba(52,211,153,0.35);background:rgba(52,211,153,0.16)}
+.cookie-status.is-off,.source-status.is-off{color:#ffb3c6;border-color:rgba(255,107,138,0.35);background:rgba(255,107,138,0.16)}
+body.theme-day .cookie-status.is-on,body.theme-day .source-status.is-on{color:#047857;background:rgba(16,185,129,0.12)}
+body.theme-day .cookie-status.is-off,body.theme-day .source-status.is-off{color:#be123c;background:rgba(244,63,94,0.1)}
+.about-grid{display:grid;gap:12px}
+.about-card h3{font-size:14px;font-weight:800;margin-bottom:8px;color:var(--text);display:flex;align-items:center;gap:8px}
+.about-card p,.about-card li{font-size:13px;line-height:1.65;color:var(--tl);font-weight:600}
+.about-card ul{padding-left:1.15em;margin:0;display:grid;gap:6px}
+.about-card b{color:var(--text);font-weight:800}
+.about-card code{font-size:11px;font-weight:600;background:rgba(128,128,160,0.12);padding:1px 6px;border-radius:4px;border:1px solid var(--bd);color:var(--pl);font-family:ui-monospace,'Cascadia Code',monospace}
+.about-meta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.about-chip{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;border:1px solid var(--bd);background:rgba(128,128,160,0.08);color:var(--text)}
+.about-cmd{display:grid;gap:6px;margin-top:8px}
+.about-cmd .row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;font-size:12px;font-weight:600;color:var(--tl)}
+.about-cmd .row code{flex-shrink:0}
+.about-warn{border-left:3px solid rgba(255,107,138,0.65);padding-left:12px}
+.source-card .card-title{margin-bottom:8px}
+.source-hint{font-size:12px;font-weight:600;color:var(--tl);line-height:1.65;margin-bottom:12px}
+.source-list{display:flex;flex-direction:column;gap:8px}
+.source-item{
+  display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;
+  border:1px solid var(--bd);background:var(--glass-input);cursor:pointer;transition:all .15s;
+}
+.source-item:hover{border-color:rgba(255,107,203,0.45)}
+.source-item.active{border-color:rgba(255,107,203,0.65);background:rgba(255,107,203,0.12);box-shadow:var(--glow-pink)}
+.source-item input{margin-top:3px;accent-color:var(--p);flex-shrink:0}
+.source-item .si-body{min-width:0;flex:1}
+.source-item .si-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:800;color:var(--text)}
+.source-item .si-badge{
+  font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;
+  border:1px solid rgba(107,197,255,0.35);color:#9dd4ff;background:rgba(107,197,255,0.14);
+}
+.source-item .si-note{margin-top:4px;font-size:12px;font-weight:600;color:var(--tl);line-height:1.55}
+.source-current{font-size:12px;font-weight:700;color:var(--pl);margin-bottom:10px}
+.source-custom{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.source-custom input{
+  flex:1;min-width:220px;padding:9px 12px;border-radius:10px;border:1px solid var(--bd);
+  background:var(--glass-input);color:var(--text);font-size:12px;font-weight:600;outline:none;
+}
+.source-custom input:focus{border-color:rgba(255,107,203,0.5)}
+.chart-sel.source-sel{max-width:min(220px,42vw)}
 .newblk{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .newblk input{
   flex:1;min-width:180px;padding:9px 12px;border-radius:10px;border:1px solid var(--bd);font-size:13px;outline:none;
@@ -292,7 +364,109 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   border:1px solid rgba(255,107,203,0.4);box-shadow:var(--glow-pink);pointer-events:none;transition:opacity .3s;
   backdrop-filter:blur(12px);
 }
-#chartTip{background:rgba(20,16,40,0.95)!important;border:1px solid var(--bd)!important;color:#fff!important}
+#chartTip{backdrop-filter:blur(8px)}
+
+/* —— 手机 / 窄屏适配 —— */
+@media (max-width: 900px){
+  .shell{
+    padding:12px 10px max(36px,env(safe-area-inset-bottom,0px));
+    padding-left:max(10px,env(safe-area-inset-left,0px));
+    padding-right:max(10px,env(safe-area-inset-right,0px));
+  }
+  .topbar{
+    flex-direction:column;align-items:stretch;gap:12px;padding:12px 14px;
+    top:env(safe-area-inset-top,0px);
+  }
+  .brand{width:100%;min-width:0}
+  .brand h1{font-size:16px}
+  .brand span{display:none}
+  .logo{width:36px;height:36px;border-radius:12px;font-size:17px}
+  .top-actions{
+    width:100%;justify-content:flex-start;gap:8px;
+  }
+  .top-actions .daynight-toggle{order:0}
+  .top-actions .switch-box{order:2;flex:1 1 auto}
+  .top-group-picker{
+    order:1;width:100%;min-width:0;max-width:none;flex:1 1 100%;
+  }
+  .top-actions .switch-box:has(select){flex:1 1 100%;width:100%}
+  .chart-sel.source-sel,.chart-sel{max-width:none;width:100%}
+  .switch-box{font-size:12px;flex-wrap:wrap}
+  .top-group-bar{
+    flex-direction:column;align-items:stretch;padding:12px 14px;gap:10px;
+  }
+  .top-group-actions{width:100%;flex-wrap:wrap}
+  .top-group-actions .chart-sel{width:100%;max-width:none}
+  .top-group-actions .btn{flex:1 1 auto}
+  .tabs{gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px}
+  .tab{padding:8px 12px;font-size:12px;flex:0 0 auto;text-align:center;white-space:nowrap}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .stat{padding:12px}
+  .stat .num{font-size:22px}
+  .filter{gap:8px;flex-direction:column;align-items:stretch}
+  .filter .picker{min-width:0;flex:1 1 100%;width:100%}
+  .filter input,.filter select{width:100%}
+  .filter select{min-width:0}
+  .card{padding:14px}
+  .card-title{font-size:14px;gap:8px;flex-wrap:wrap}
+  .card-title > span[style*="margin-left"]{margin-left:0!important;width:100%;justify-content:flex-start}
+  .source-hint{font-size:12px;line-height:1.55}
+  .source-custom{flex-direction:column;align-items:stretch}
+  .source-custom input{min-width:0;width:100%}
+  .source-custom .btn{width:100%}
+  .remark-form{flex-direction:column;align-items:stretch}
+  .remark-field{min-width:0;width:100%}
+  .remark-field[style]{max-width:none!important;min-width:0!important}
+  .newblk{flex-direction:column;align-items:stretch}
+  .newblk input{min-width:0;width:100%}
+  .newblk .btn{width:100%}
+  .tbl-wrap{
+    -webkit-overflow-scrolling:touch;
+    max-width:100%;
+    margin:0 -4px;
+    padding:0 4px;
+  }
+  .tbl-wrap table{min-width:640px}
+  .rank-bar{flex:0 1 72px}
+  .rank-item{gap:8px}
+  .rank-link{padding:4px 8px}
+  .legend{flex-wrap:wrap;gap:10px 14px;font-size:11px}
+  .pick-list.wide-drop{width:calc(100vw - 20px);max-width:calc(100vw - 20px);min-width:0}
+  .bg-credit{max-width:70vw;font-size:9px;right:8px;bottom:max(6px,env(safe-area-inset-bottom,0px))}
+  #toast{left:12px;right:12px;transform:none;width:auto;text-align:center;bottom:max(16px,env(safe-area-inset-bottom,0px))}
+  #chartTip{max-width:min(220px,calc(100vw - 32px))!important}
+  .daynight-toggle .dn-label{min-width:0}
+  .target-actions{flex-wrap:wrap}
+  .target-actions .btn{flex:1 1 auto}
+  .act-btns{flex-wrap:wrap}
+  #chart{overflow:visible}
+  .pager{justify-content:center}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs{scrollbar-width:none}
+}
+@media (max-width: 480px){
+  .shell{padding:10px 8px 28px}
+  .topbar{padding:10px 12px;border-radius:14px}
+  .brand h1{font-size:15px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tab{padding:8px 8px;font-size:11px}
+  .btn{padding:8px 12px;font-size:12px}
+  .btn-sm{padding:6px 10px}
+  .tbl-wrap table{min-width:560px;font-size:12px}
+  .state-badge{padding:3px 8px;font-size:11px}
+  .source-item{padding:10px}
+  .source-item .si-note{font-size:11px}
+  .daynight-toggle{padding:4px 8px 4px 4px}
+  .daynight-toggle .dn-label{display:none}
+}
+@media (hover:none) and (pointer:coarse){
+  .btn,.tab,.daynight-toggle,.pick-item,.pg-num,.source-item{
+    -webkit-tap-highlight-color:rgba(255,107,203,0.18);
+  }
+  .picker input,.filter input,.filter select,.source-custom input,.remark-field input{
+    font-size:16px; /* 避免 iOS 聚焦自动放大 */
+  }
+}
 </style>
 </head>
 <body class="theme-day">
@@ -318,6 +492,9 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
       <button type="button" class="sclear hidden" id="topGroupClear" title="清空">×</button>
       <div class="pick-list wide-drop" id="topGroupPickList"></div>
     </div>
+    <label class="switch-box">歌源
+      <select id="musicSource" class="chart-sel source-sel" onchange="setMusicSource(this.value)" title="全局默认歌源"></select>
+    </label>
     <label class="switch-box"><input type="checkbox" id="globalLyrics" onchange="toggleGlobalLyrics(this.checked)"> 全局歌词</label>
   </div>
 </div>
@@ -325,6 +502,9 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   <div class="grp-cell" id="topGroupHead"></div>
   <div class="target-stats" id="topGroupStats"></div>
   <div class="top-group-actions">
+    <label class="switch-box">群歌源
+      <select id="groupSourceSel" class="chart-sel" onchange="setGroupSource(this.value)" title="本群覆盖全局歌源"></select>
+    </label>
     <button class="btn btn-secondary btn-sm" onclick="toggleGroupLyrics()">切换群歌词</button>
     <button class="btn btn-ghost btn-sm" onclick="viewGroupRecords()">查看记录</button>
   </div>
@@ -334,8 +514,20 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   <div class="tab" data-tab="records" onclick="switchTab('records')">📋 点歌记录</div>
   <div class="tab" data-tab="users" onclick="switchTab('users')">👤 用户设置</div>
   <div class="tab" data-tab="groups" onclick="switchTab('groups')">💬 群歌词控制</div>
+  <div class="tab" data-tab="about" onclick="switchTab('about')">ℹ️ 关于</div>
 </div>
 <div class="panel active" id="panel-overview">
+  <div class="card source-card">
+    <div class="card-title"><span class="dot"></span>歌源选择<span id="sourceCurrent" class="source-status">-</span></div>
+    <p class="source-hint">日常点歌可用<strong>第三方</strong>；想<strong>搜得准</strong>用官方搜索（播放会自动尝试其他接口）。落月偏高音质，部分曲目可能只有试听。换源后请重新 <b>#点歌</b>。请自行遵守版权与平台规则。</p>
+    <div class="source-current" id="sourceCurrentNote"></div>
+    <div class="source-list" id="sourceList"></div>
+    <div class="source-custom">
+      <input id="customSourceUrl" type="text" placeholder="自定义接口 URL，需含 {msg}，播放可含 {n}" autocomplete="off">
+      <button class="btn btn-secondary btn-sm" type="button" onclick="saveCustomSource()">保存自定义</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="clearCustomSource()">清除</button>
+    </div>
+  </div>
   <div class="quick">
   <div class="quick-card">
     <div class="quick-title">👥 快捷搜索用户</div>
@@ -359,14 +551,15 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
 <div class="panel" id="panel-records">
   <div class="filter">
     <div class="picker"><input type="text" id="recKw" placeholder="关键词筛选…" autocomplete="off"><button type="button" class="sclear hidden" id="recKwClear" title="清空">×</button></div>
-    <select id="recType" onchange="renderRecords()"><option value="">全部</option><option value="search">搜索</option><option value="play">播放</option></select>
+    <select id="recType" onchange="renderRecords()"><option value="">全部类型</option><option value="search">搜索</option><option value="play">播放</option></select>
+    <select id="recScope" onchange="renderRecords()"><option value="">范围全部</option><option value="personal">个人</option><option value="group">群</option></select>
     <div class="picker"><input type="text" id="recGroupIn" placeholder="按群 openid…" autocomplete="off"><button type="button" class="sclear hidden" id="recGroupInClear" title="清空">×</button></div>
     <div class="picker"><input type="text" id="recUserIn" placeholder="按用户 openid…" autocomplete="off"><button type="button" class="sclear hidden" id="recUserInClear" title="清空">×</button></div>
     <button class="btn btn-ghost btn-sm" onclick="clearFilters()">清除筛选</button>
   </div>
   <div class="card">
-    <div class="card-title"><span class="dot"></span>点歌记录列表</div>
-    <div class="tbl-wrap"><table><thead><tr><th>时间</th><th>类型</th><th>群 openid</th><th>用户 openid</th><th>昵称</th><th>关键词</th><th>歌名</th><th>歌手</th></tr></thead><tbody id="recordsBody"></tbody></table></div>
+    <div class="card-title"><span class="dot"></span>点歌记录列表<span style="margin-left:auto;font-size:11px;color:var(--tl);font-weight:500">范围标注：个人 `#点歌` / 群 `#群点歌`</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>时间</th><th>类型</th><th>范围</th><th>群 openid</th><th>用户 openid</th><th>昵称</th><th>关键词</th><th>歌名</th><th>歌手</th></tr></thead><tbody id="recordsBody"></tbody></table></div>
     <div class="pager" id="recPager"></div>
   </div>
 </div>
@@ -423,13 +616,69 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
     </div>
     <div class="tbl-wrap"><table><thead><tr><th>头像</th><th>群名称</th><th>群人数</th><th>生效</th><th>群设置</th><th>搜索</th><th>播放</th><th>操作</th></tr></thead><tbody id="groupsBody"></tbody></table></div>
     <div class="newblk">
-      <input type="text" id="newGroupId" placeholder="群 openid（未记录过的群）" onkeydown="if(event.key==='Enter')setNewGroup(true)">
-      <button class="btn btn-primary btn-sm" onclick="setNewGroup(true)">搜索添加</button>
+      <input type="text" id="newGroupId" placeholder="群 openid（未记录过的群）" onkeydown="if(event.key==='Enter')setNewGroup('add')">
+      <button class="btn btn-primary btn-sm" onclick="setNewGroup('add')">添加群</button>
       <button class="btn btn-secondary btn-sm" onclick="setNewGroup(true)">开启歌词</button>
       <button class="btn btn-danger btn-sm" onclick="setNewGroup(false)">关闭歌词</button>
       <button class="btn btn-ghost btn-sm" onclick="setNewGroup(null)">跟随全局</button>
     </div>
     <p class="group-follow-hint">群设置为<b>关</b>时，本群成员无法通过个人设置开启歌词。</p>
+  </div>
+</div>
+<div class="panel" id="panel-about">
+  <div class="about-grid">
+    <div class="card about-card">
+      <div class="card-title"><span class="dot"></span>插件简介</div>
+      <p>面向 ElainaBot v2 的 QQ 机器人点歌插件。支持个人 / 群点歌、多歌源切换、LRC 歌词、语音或文件发送，以及本 Web 管理面板。</p>
+      <div class="about-meta">
+        <span class="about-chip">版本 <b id="aboutVersion">1.9.4</b></span>
+        <span class="about-chip">许可 MIT</span>
+        <span class="about-chip">目录名 <code>qq_music</code></span>
+        <span class="about-chip">无额外依赖</span>
+      </div>
+    </div>
+    <div class="card about-card">
+      <h3>常用指令</h3>
+      <div class="about-cmd">
+        <div class="row"><code>#点歌 歌名</code><span>个人搜索（仅发起人可 <code>#听N</code>）</span></div>
+        <div class="row"><code>#群点歌 歌名</code><span>本群共享列表（成员可 <code>#群听N</code>）</span></div>
+        <div class="row"><code>#歌源</code><span>查看 / 切换歌源（群内改本群覆盖）</span></div>
+        <div class="row"><code>#歌词开</code> <code>#歌词关</code><span>个人歌词；群主可用 <code>#群歌词开/关</code></span></div>
+        <div class="row"><code>#音乐帮助</code><span>群内完整帮助</span></div>
+      </div>
+    </div>
+    <div class="card about-card">
+      <h3>歌源怎么选</h3>
+      <ul>
+        <li><b>第三方（默认）</b>：搜播一体，适合日常点歌；可用性与可播范围依赖第三方接口。</li>
+        <li><b>官方搜索</b>：列表更接近 QQ 音乐；官方播放直链通常不可用，播放会自动尝试其他接口。</li>
+        <li><b>落月 QQ</b>：偏高音质；部分曲目可能只有短时试听，插件会尝试其他接口。</li>
+        <li><b>网易云</b>：换平台曲库；与 QQ 不完全对应，部分曲目可能无直链。</li>
+        <li><b>汽水音乐</b>：暂不支持按歌名点歌（无稳定公开搜索接口）。</li>
+      </ul>
+      <p style="margin-top:8px">换源后请重新 <code>#点歌</code> / <code>#群点歌</code>。已搜出的列表仍按<strong>搜索当时</strong>的歌源播放。</p>
+    </div>
+    <div class="card about-card about-warn">
+      <h3>说明</h3>
+      <ul>
+        <li>音源来自<strong>第三方接口</strong>，不保证可用与完整播放。</li>
+        <li>请遵守法律与版权；建议仅自用娱乐。MIT 只覆盖本插件代码。</li>
+        <li>搜索列表约 <b>3 分钟</b>有效；换源后请重新 <code>#点歌</code>。</li>
+        <li>歌词优先级：群显式关闭 &gt; 个人 &gt; 群 &gt; 全局。</li>
+        <li>群头像请填数字 QQ 群号（非 openid）。</li>
+      </ul>
+    </div>
+    <div class="card about-card">
+      <h3>本面板能做什么</h3>
+      <ul>
+        <li><b>概览</b>：统计、趋势、热门排行、全局歌源与自定义接口。</li>
+        <li><b>点歌记录</b>：按类型 / 范围 / 群 / 用户筛选。</li>
+        <li><b>用户设置</b>：个人歌词偏好。</li>
+        <li><b>群歌词控制</b>：群开关、群备注与头像、未记录群的添加。</li>
+        <li>顶栏可选中群，单独覆盖本群歌源与歌词。</li>
+      </ul>
+      <p style="margin-top:8px">更完整的说明见插件目录 <code>README.md</code> / <code>USAGE.md</code>。</p>
+    </div>
   </div>
 </div>
 <script>
@@ -463,15 +712,74 @@ function bindPickList(listId,handler){
     handler(item.getAttribute('data-pick')||'');
   });
 }
+const PICK_ANCHOR={topGroupPickList:'topGroupInput',userList:'userSearch',editUserList:'editUserInput',groupFilterList:'groupFilterIn'};
+function pickListAnchor(list){
+  const aid=list&&PICK_ANCHOR[list.id];
+  if(aid)return document.getElementById(aid);
+  const home=list&&list._home;
+  return home?home.querySelector('input'):null;
+}
+function pickListPicker(list){
+  const anchor=pickListAnchor(list);
+  return anchor?anchor.closest('.picker'):null;
+}
+function placePickList(list){
+  if(!list||!list.classList.contains('open'))return;
+  const anchor=pickListAnchor(list);
+  if(!anchor)return;
+  const r=anchor.getBoundingClientRect();
+  const narrow=window.innerWidth<=900;
+  const edge=narrow?10:12;
+  const maxW=Math.min(720,Math.max(240,window.innerWidth-edge*2));
+  const width=narrow
+    ? Math.min(maxW,Math.max(r.width,window.innerWidth-edge*2))
+    : Math.min(maxW,Math.max(r.width,Math.min(520,maxW)));
+  let left=narrow?edge:r.left;
+  if(left+width>window.innerWidth-edge)left=Math.max(edge,window.innerWidth-width-edge);
+  if(left<edge)left=edge;
+  const maxH=narrow?Math.min(260,Math.floor(window.innerHeight*0.45)):260;
+  let top=r.bottom+6;
+  if(top+Math.min(maxH,list.scrollHeight||maxH)>window.innerHeight-8 && r.top>maxH+20){
+    top=Math.max(8,r.top-Math.min(maxH,list.offsetHeight||maxH)-6);
+  }
+  list.classList.add('pick-portal');
+  list.style.position='fixed';
+  list.style.top=top+'px';
+  list.style.left=left+'px';
+  list.style.right='auto';
+  list.style.width=width+'px';
+  list.style.maxWidth=maxW+'px';
+  list.style.maxHeight=maxH+'px';
+  list.style.zIndex='10050';
+}
 function closeAllPickLists(except){
-  document.querySelectorAll('.pick-list.open').forEach(el=>{if(except&&el.id===except)return;el.classList.remove('open');});
+  document.querySelectorAll('.pick-list.open').forEach(el=>{
+    if(except&&el.id===except)return;
+    el.classList.remove('open');
+  });
+  const keep=except?PICK_ANCHOR[except]:'';
+  document.querySelectorAll('.picker.is-open').forEach(p=>{
+    const inp=p.querySelector('input');
+    if(keep&&inp&&inp.id===keep)return;
+    p.classList.remove('is-open');
+  });
 }
 function showPickList(listId,html){
   const list=document.getElementById(listId);
   if(!list)return;
   list.innerHTML=html;
   closeAllPickLists(listId);
+  if(list.parentElement!==document.body){
+    list._home=list.parentElement;
+    document.body.appendChild(list);
+  }
+  const picker=pickListPicker(list);
+  if(picker)picker.classList.add('is-open');
   list.classList.add('open');
+  placePickList(list);
+}
+function repositionOpenPickLists(){
+  document.querySelectorAll('.pick-list.open').forEach(placePickList);
 }
 function groupAvatarUrls(g){
   const urls=[];
@@ -539,7 +847,7 @@ async function saveGroupRemark(){
 }
 function fmtMemberCount(n){const v=parseInt(n,10);return Number.isFinite(v)&&v>0?v:'-';}
 function groupDisplayName(g){if(!g)return '';const n=String(g.name||'').trim();return n||String(g.group_id||'');}
-function groupMatchQuery(g,q){if(!q)return true;const qq=q.toLowerCase();return String(g.group_id||'').toLowerCase().includes(qq)||String(g.name||'').toLowerCase().includes(qq);}
+function groupMatchQuery(g,q){if(!q)return true;const qq=q.toLowerCase();return String(g.group_id||'').toLowerCase().includes(qq)||String(g.name||'').toLowerCase().includes(qq)||String(g.group_qq||'').toLowerCase().includes(qq);}
 function toast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}t.textContent=msg;t.style.opacity='1';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.opacity='0';},1800);}
 const THEME_BG={
   day:{
@@ -581,6 +889,7 @@ function updateThemeUi(theme,animate){
   if(dayEl)dayEl.classList.toggle('active',theme==='day');
   if(nightEl)nightEl.classList.toggle('active',theme==='night');
   setBgCredit(theme);
+  if(typeof renderChart==='function'){try{renderChart();}catch(e){}}
   if(animate)toast(theme==='night'?'已切换夜间模式':'已切换日间模式');
 }
 function preloadThemeBg(theme,onReady){
@@ -620,17 +929,166 @@ function lyricsBadge(v,followLabel){if(v===true)return '<span class="state-badge
 function nextLyricsState(cur){if(cur===true)return false;if(cur===false)return null;return true;}
 function ts2str(t){if(!t)return '-';const d=new Date(t*1000);const p=n=>String(n).padStart(2,'0');return d.getMonth()+1+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());}
 function switchTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id==='panel-'+t));}
-async function fetchData(){await Promise.all([getStats(),getRecords(),getUsers(),getGroups(),getSeries()]);if(currentGroup&&currentGroup.group_id){const g=DASH.groups.find(x=>x.group_id===currentGroup.group_id);if(g)currentGroup=g;}renderStats();renderTop();renderChart();renderRecords();renderUsers();renderGroups();renderTopGroupSelect();refreshOpenGroupPickers();}
-async function getSettings(){try{const r=await fetch(API+'/settings');const j=await r.json();if(j.ok)document.getElementById('globalLyrics').checked=!!j.show_lyrics;}catch(e){}}
+async function fetchData(){await Promise.all([getStats(),getRecords(),getUsers(),getGroups(),getSeries()]);if(currentGroup&&currentGroup.group_id){const g=DASH.groups.find(x=>x.group_id===currentGroup.group_id);if(g)currentGroup=g;const psel=document.getElementById('groupSourceSel');if(psel)psel.value=currentGroup.music_source||'';}renderStats();renderTop();renderChart();renderRecords();renderUsers();renderGroups();renderTopGroupSelect();refreshOpenGroupPickers();}
+let MUSIC_SOURCES=[];
+let CURRENT_SOURCE_ID='';
+async function getSettings(){
+  try{
+    const r=await fetch(API+'/settings');
+    const j=await r.json();
+    if(!j.ok)return;
+    document.getElementById('globalLyrics').checked=!!j.show_lyrics;
+    MUSIC_SOURCES=j.sources||[];
+    CURRENT_SOURCE_ID=j.music_source||'';
+    const custom=document.getElementById('customSourceUrl');
+    if(custom)custom.value=j.custom_source_url||'';
+    fillSourceSelects(CURRENT_SOURCE_ID);
+    renderSourceList(CURRENT_SOURCE_ID);
+    applySourceStatus(j);
+  }catch(e){}
+}
+function sourceOptionLabel(s){
+  const short=s.short||s.name||s.id;
+  const badge=s.badge?' · '+s.badge:'';
+  return short+badge;
+}
+function fillSourceSelects(globalId){
+  const gsel=document.getElementById('musicSource');
+  const psel=document.getElementById('groupSourceSel');
+  const opts=(MUSIC_SOURCES||[]).map(s=>'<option value="'+esc(s.id)+'" title="'+esc(s.note||'')+'">'+esc(sourceOptionLabel(s))+'</option>').join('');
+  if(gsel){
+    gsel.innerHTML=opts||'<option value="aa_qq">第三方</option>';
+    if(globalId)gsel.value=globalId;
+    if(gsel.value!==globalId&&globalId){
+      // 选项尚未包含该 id 时保持尽量可选
+      gsel.value=globalId;
+    }
+  }
+  if(psel){
+    const keep=currentGroup&&currentGroup.music_source||'';
+    psel.innerHTML='<option value="">跟随全局</option>'+opts;
+    psel.value=keep;
+  }
+}
+function renderSourceList(activeId){
+  const box=document.getElementById('sourceList');
+  if(!box)return;
+  const aid=activeId||CURRENT_SOURCE_ID||'';
+  if(!(MUSIC_SOURCES||[]).length){
+    box.innerHTML='<div class="pick-empty">暂无歌源</div>';
+    return;
+  }
+  box.innerHTML=MUSIC_SOURCES.map(s=>{
+    const on=s.id===aid?' active':'';
+    const checked=s.id===aid?' checked':'';
+    const badge=s.badge?'<span class="si-badge">'+esc(s.badge)+'</span>':'';
+    return '<label class="source-item'+on+'" data-sid="'+esc(s.id)+'">'+
+      '<input type="radio" name="musicSourcePick" value="'+esc(s.id)+'"'+checked+'>'+
+      '<div class="si-body"><div class="si-title">'+esc(s.name||s.id)+badge+'</div>'+
+      '<div class="si-note">'+esc(s.note||'')+'</div></div></label>';
+  }).join('');
+  box.querySelectorAll('.source-item').forEach(el=>{
+    el.addEventListener('click',e=>{
+      const sid=el.getAttribute('data-sid')||'';
+      if(!sid||sid===CURRENT_SOURCE_ID)return;
+      setMusicSource(sid);
+    });
+  });
+}
+function applySourceStatus(j){
+  const el=document.getElementById('sourceCurrent');
+  const note=document.getElementById('sourceCurrentNote');
+  if(el){
+    el.textContent=j.music_source_name||j.music_source||'-';
+    el.className='source-status is-on';
+  }
+  if(note){
+    note.textContent=j.music_source_note?('当前：'+j.music_source_note):'';
+  }
+}
+async function setMusicSource(id){
+  if(!id)return;
+  try{
+    const r=await fetch(API+'/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({music_source:id})});
+    const j=await r.json();
+    if(!j.ok){toast(j.error||'切换失败');await getSettings();return;}
+    CURRENT_SOURCE_ID=j.music_source||id;
+    if(j.sources)MUSIC_SOURCES=j.sources;
+    fillSourceSelects(CURRENT_SOURCE_ID);
+    renderSourceList(CURRENT_SOURCE_ID);
+    applySourceStatus(j);
+    toast('全局歌源：'+(j.music_source_name||id));
+  }catch(e){toast('切换失败');}
+}
+async function saveCustomSource(){
+  const inp=document.getElementById('customSourceUrl');
+  const url=(inp&&inp.value||'').trim();
+  try{
+    const body={custom_source_url:url};
+    if(url)body.music_source='custom';
+    else if(CURRENT_SOURCE_ID==='custom')body.music_source='aa_qq';
+    const r=await fetch(API+'/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(!j.ok){toast(j.error||'保存失败');return;}
+    CURRENT_SOURCE_ID=j.music_source||CURRENT_SOURCE_ID;
+    if(j.sources)MUSIC_SOURCES=j.sources;
+    fillSourceSelects(CURRENT_SOURCE_ID);
+    renderSourceList(CURRENT_SOURCE_ID);
+    applySourceStatus(j);
+    toast(url?'自定义接口已保存并启用':'自定义接口已清除');
+  }catch(e){toast('保存失败');}
+}
+async function clearCustomSource(){
+  const inp=document.getElementById('customSourceUrl');
+  if(inp)inp.value='';
+  try{
+    const body={custom_source_url:''};
+    if(CURRENT_SOURCE_ID==='custom')body.music_source='aa_qq';
+    const r=await fetch(API+'/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(!j.ok){toast(j.error||'清除失败');return;}
+    CURRENT_SOURCE_ID=j.music_source||'aa_qq';
+    if(j.sources)MUSIC_SOURCES=j.sources;
+    fillSourceSelects(CURRENT_SOURCE_ID);
+    renderSourceList(CURRENT_SOURCE_ID);
+    applySourceStatus(j);
+    toast('已清除自定义接口');
+  }catch(e){toast('清除失败');}
+}
+async function setGroupSource(id){
+  if(!currentGroup||!currentGroup.group_id){toast('请先选择群');return;}
+  try{
+    const r=await fetch(API+'/group_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({group_id:currentGroup.group_id,music_source:id})});
+    const j=await r.json();
+    if(!j.ok){toast(j.error||'切换失败');return;}
+    currentGroup.music_source=id||'';
+    const g=DASH.groups.find(x=>x.group_id===currentGroup.group_id);
+    if(g)g.music_source=id||'';
+    const name=(MUSIC_SOURCES.find(s=>s.id===id)||{}).name||(id?'已覆盖':'跟随全局');
+    toast(id?('本群歌源：'+name):'本群已跟随全局');
+  }catch(e){toast('切换失败');}
+}
 async function getStats(){try{const r=await fetch(API+'/stats');const j=await r.json();if(j.ok&&j.data){DASH.stats=j.data.stats||{};DASH.top_songs=j.data.top_songs||[];DASH.recent_records=j.data.recent_records||[];if(Array.isArray(j.data.users))DASH.users=j.data.users;if(Array.isArray(j.data.groups))DASH.groups=j.data.groups;if(Array.isArray(j.data.records)&&!DASH.records.length)DASH.records=j.data.records;}}catch(e){}}
 async function getRecords(){try{const r=await fetch(API+'/records');const j=await r.json();if(j.ok&&j.data&&Array.isArray(j.data.records))DASH.records=j.data.records;}catch(e){}}
 async function getSeries(){try{const r=await fetch(API+'/series?period='+encodeURIComponent(chartPeriod));const j=await r.json();if(j.ok&&j.data)DASH.series=j.data;else DASH.series=null;}catch(e){DASH.series=null;}}
 async function getUsers(){try{const r=await fetch(API+'/user_settings');if(!r.ok)return;const j=await r.json();if(j.ok&&j.data&&Array.isArray(j.data.users))DASH.users=j.data.users;}catch(e){}}
 async function getGroups(){try{const r=await fetch(API+'/group_settings');if(!r.ok)return;const j=await r.json();if(j.ok&&j.data&&Array.isArray(j.data.groups))DASH.groups=j.data.groups;}catch(e){}}
-function renderStats(){const s=DASH.stats||{};const items=[{n:s.searches||0,l:'搜索'},{n:s.plays||0,l:'播放'},{n:s.lyrics_sent||0,l:'歌词发送'},{n:s.lyrics_skipped||0,l:'歌词跳过'},{n:DASH.users.length,l:'活跃用户'},{n:DASH.groups.length,l:'活跃群'}];document.getElementById('stats').innerHTML=items.map(x=>`<div class="stat"><div class="num">${x.n}</div><div class="lab">${x.l}</div></div>`).join('');}
+function renderStats(){
+  const s=DASH.stats||{};
+  const recs=DASH.records||[];
+  let g=0,p=0;
+  recs.forEach(r=>{if(r.scope==='group')g++;else p++;});
+  const items=[
+    {n:s.searches||0,l:'搜索'},{n:s.plays||0,l:'播放'},
+    {n:p,l:'个人记录'},{n:g,l:'群记录'},
+    {n:s.lyrics_sent||0,l:'歌词发送'},{n:s.lyrics_skipped||0,l:'歌词跳过'},
+    {n:DASH.users.length,l:'活跃用户'},{n:DASH.groups.length,l:'活跃群'}
+  ];
+  document.getElementById('stats').innerHTML=items.map(x=>`<div class="stat"><div class="num">${x.n}</div><div class="lab">${x.l}</div></div>`).join('');
+}
 function renderTop(){const el=document.getElementById('rank');if(!el)return;const all=DASH.top_songs||[];if(!all.length){el.innerHTML='<div class="empty">暂无播放数据</div>';return;}const rows=all.slice(0,10);const max=Math.max(...rows.map(r=>r.count||0),1);el.innerHTML='<div class="rank">'+rows.map((r,i)=>{const no=i+1;const pct=Math.round((r.count||0)/max*100);const cover=r.cover?'<img class="rank-cover" src="'+esc(r.cover)+'" alt="">':'<span class="rank-cover ph">🎵</span>';const link=r.url?'<a class="rank-link" href="'+esc(r.url)+'" target="_blank" rel="noopener">原链接</a>':'';return '<div class="rank-item"><span class="rank-no '+(no<=3?'top':'')+'">'+no+'</span>'+cover+'<span class="rank-name" title="'+esc(r.song||'')+'">'+esc(r.song||'')+' · '+esc(r.singer||'')+'</span><div class="rank-bar"><i style="width:'+pct+'%"></i></div><span class="rank-count">'+(r.count||0)+'次</span>'+link+'</div>';}).join('')+'</div>';}
 function renderRecent(){const el=document.getElementById('recent');const all=DASH.recent_records||[];if(!all.length){el.innerHTML='<div class="empty">暂无点歌记录</div>';return;}const tp=Math.max(1,Math.ceil(all.length/recentPS));if(recentPage>tp)recentPage=tp;const st=(recentPage-1)*recentPS;const rows=all.slice(st,st+recentPS);el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>时间</th><th>类型</th><th>内容</th><th>用户</th></tr></thead><tbody>${rows.map(recentRow).join('')}</tbody></table></div>`;el.insertAdjacentHTML('beforeend',mkPager(el,'recentPage','recentPS',tp,'goRecentPage'));}
-function recentRow(r){const type=r.type==='play'?'<span class="badge b-play">播放</span>':'<span class="badge b-search">搜索</span>';const content=r.type==='play'?`${esc(r.song||'')} · ${esc(r.singer||'')}`:`${esc(r.keyword||'')}`;const who=r.nickname||(r.uid?String(r.uid).slice(-6):'-');return `<tr><td>${ts2str(r.ts)}</td><td>${type}</td><td>${content}</td><td>${esc(who)}</td></tr>`;}
+function recentRow(r){const type=r.type==='play'?'<span class="badge b-play">播放</span>':'<span class="badge b-search">搜索</span>';const scope=scopeBadge(r);const content=r.type==='play'?`${esc(r.song||'')} · ${esc(r.singer||'')}`:`${esc(r.keyword||'')}`;const who=r.nickname||(r.uid?String(r.uid).slice(-6):'-');return `<tr><td>${ts2str(r.ts)}</td><td>${type} ${scope}</td><td>${content}</td><td>${esc(who)}</td></tr>`;}
 function goTopPage(p){topPage=p;renderTop();renderTopPager();}
 function goRecentPage(p){recentPage=p;renderRecent();}
 function renderTopPager(){return '';}
@@ -648,10 +1106,18 @@ function renderChart(){
   var cx=function(i){return P+(n<=1?plotW/2:plotW*i/(n-1));};
   var cy=function(v){return P+plotH-(v/maxV)*plotH;};
   function pts(arr){return arr.map(function(v,i){return cx(i)+','+cy(v);}).join(' ');}
-  var grid='';[0,0.25,0.5,0.75,1].forEach(function(f){var yy=P+plotH-f*plotH;grid+='<line x1="'+P+'" y1="'+yy+'" x2="'+(P+plotW)+'" y2="'+yy+'" stroke="rgba(255,255,255,0.08)" stroke-width="1"/><text x="'+(P-6)+'" y="'+(yy+4)+'" text-anchor="end" font-size="10" fill="rgba(255,255,255,0.45)">'+Math.round(maxV*f)+'</text>';});
+  var day=currentTheme==='day';
+  var gridStroke=day?'rgba(30,40,80,0.14)':'rgba(255,255,255,0.08)';
+  var axisFill=day?'rgba(40,40,70,0.72)':'rgba(255,255,255,0.45)';
+  var crossStroke=day?'rgba(30,58,138,0.55)':'rgba(255,255,255,0.45)';
+  var tipBg=day?'rgba(255,255,255,0.96)':'rgba(20,16,40,0.95)';
+  var tipFg=day?'#1a1428':'#fff';
+  var tipBd=day?'rgba(90,70,130,0.22)':'rgba(255,255,255,0.18)';
+  var grid='';[0,0.25,0.5,0.75,1].forEach(function(f){var yy=P+plotH-f*plotH;grid+='<line x1="'+P+'" y1="'+yy+'" x2="'+(P+plotW)+'" y2="'+yy+'" stroke="'+gridStroke+'" stroke-width="1"/><text x="'+(P-6)+'" y="'+(yy+4)+'" text-anchor="end" font-size="10" fill="'+axisFill+'">'+Math.round(maxV*f)+'</text>';});
   var step=Math.max(1,Math.ceil(n/12)),xlab='';
-  labels.forEach(function(l,i){if(i%step===0)xlab+='<text x="'+cx(i)+'" y="'+(H-P+16)+'" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.45)">'+l+'</text>';});
+  labels.forEach(function(l,i){if(i%step===0)xlab+='<text x="'+cx(i)+'" y="'+(H-P+16)+'" text-anchor="middle" font-size="10" fill="'+axisFill+'">'+l+'</text>';});
   var col=['#ff6bcb','#6bc5ff','#ffd166'],names=['点歌搜索','播放','活跃人数'];
+  if(day)col=['#db2777','#2563eb','#d97706'];
   var line='<polyline points="'+pts(se)+'" fill="none" stroke="'+col[0]+'" stroke-width="2.5"/>'+
             '<polyline points="'+pts(pl)+'" fill="none" stroke="'+col[1]+'" stroke-width="2.5"/>'+
             '<polyline points="'+pts(us)+'" fill="none" stroke="'+col[2]+'" stroke-width="2.5"/>';
@@ -660,11 +1126,11 @@ function renderChart(){
     dots+='<circle cx="'+cx(i)+'" cy="'+cy(se[i]||0)+'" r="3" fill="'+col[0]+'"/>'+
           '<circle cx="'+cx(i)+'" cy="'+cy(pl[i]||0)+'" r="3" fill="'+col[1]+'"/>'+
           '<circle cx="'+cx(i)+'" cy="'+cy(us[i]||0)+'" r="3" fill="'+col[2]+'"/>';
-    hz+='<rect x="'+(cx(i)-10)+'" y="'+P+'" width="20" height="'+plotH+'" fill="transparent" onmouseenter="showTip('+i+')" onmouseleave="hideTip()"/>';
+    hz+='<rect x="'+(cx(i)-10)+'" y="'+P+'" width="20" height="'+plotH+'" fill="transparent" onmouseenter="showTip('+i+')"/>';
   });
   var legend='<div class="legend">'+names.map(function(nm,k){return '<span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+col[k]+';margin-right:4px"></i>'+nm+'</span>';}).join('')+'</div>';
-  var cross='<line id="chartVLine" x1="'+P+'" y1="'+P+'" x2="'+P+'" y2="'+(P+plotH)+'" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-dasharray="4,4" style="display:none;pointer-events:none"/><line id="chartHLine" x1="'+P+'" y1="'+P+'" x2="'+(P+plotW)+'" y2="'+P+'" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-dasharray="4,4" style="display:none;pointer-events:none"/>';
-  el.innerHTML='<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="max-width:760px;display:block;margin:0 auto" onmousemove="chartMove(event)" onmouseleave="chartLeave()">'+grid+xlab+line+dots+hz+cross+'</svg>'+legend+'<div id="chartTip" style="position:absolute;pointer-events:none;top:14px;padding:9px 12px;border-radius:10px;font-size:11px;line-height:1.6;display:none;z-index:50;max-width:220px"></div>';
+  var cross='<line id="chartVLine" x1="'+P+'" y1="'+P+'" x2="'+P+'" y2="'+(P+plotH)+'" stroke="'+crossStroke+'" stroke-width="1.5" stroke-dasharray="4,4" style="display:none;pointer-events:none"/><line id="chartHLine" x1="'+P+'" y1="'+P+'" x2="'+(P+plotW)+'" y2="'+P+'" stroke="'+crossStroke+'" stroke-width="1.5" stroke-dasharray="4,4" style="display:none;pointer-events:none"/>';
+  el.innerHTML='<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="max-width:100%;display:block;margin:0 auto;touch-action:none" onmousemove="chartMove(event)" onmouseleave="chartLeave()" ontouchmove="chartMove(event)" ontouchend="chartLeave()">'+grid+xlab+line+dots+hz+cross+'</svg>'+legend+'<div id="chartTip" style="position:absolute;pointer-events:none;top:14px;padding:9px 12px;border-radius:10px;font-size:11px;line-height:1.6;display:none;z-index:50;max-width:min(220px,calc(100vw - 32px));background:'+tipBg+';border:1px solid '+tipBd+';color:'+tipFg+'"></div>';
   window.__chartData={labels:labels,se:se,pl:pl,us:us,col:col,names:names};
 }
 function setChartPeriod(p){chartPeriod=p;var sel=document.getElementById('chartPeriodSel');if(sel)sel.value=p;document.getElementById('chart').innerHTML='<div class="empty">加载中…</div>';getSeries().then(()=>renderChart());}
@@ -683,10 +1149,11 @@ function showTip(i){
   tip.style.left=Math.min(Math.max(0,xx-tw/2),cr.width-tw-4)+'px';
 }
 function hideTip(){var tip=document.getElementById('chartTip');if(tip)tip.style.display='none';}
-function chartLeave(){var v=document.getElementById('chartVLine'),h=document.getElementById('chartHLine');if(v)v.style.display='none';if(h)h.style.display='none';}
-function chartMove(ev){var svg=document.querySelector('#chart svg');if(!svg)return;var sr=svg.getBoundingClientRect();var W=760,H=230,P=36,padR=12;var plotW=W-P*2-padR,plotH=H-P*2;var mx=(ev.clientX-sr.left)/sr.width*W,my=(ev.clientY-sr.top)/sr.height*H;mx=Math.max(P,Math.min(P+plotW,mx));my=Math.max(P,Math.min(P+plotH,my));var v=document.getElementById('chartVLine'),h=document.getElementById('chartHLine');if(v){v.setAttribute('x1',mx);v.setAttribute('x2',mx);v.setAttribute('y1',P);v.setAttribute('y2',P+plotH);v.style.display='block';}if(h){h.setAttribute('x1',P);h.setAttribute('x2',P+plotW);h.setAttribute('y1',my);h.setAttribute('y2',my);h.style.display='block';}}
-function filtRecords(){const kw=(document.getElementById('recKw').value||'').trim().toLowerCase();const type=document.getElementById('recType').value;const g=(document.getElementById('recGroupIn').value||'').trim().toLowerCase();const u=(document.getElementById('recUserIn').value||'').trim().toLowerCase();let rows=DASH.records||[];if(type)rows=rows.filter(r=>r.type===type);if(kw)rows=rows.filter(r=>(r.keyword||'').toLowerCase().includes(kw)||(r.song||'').toLowerCase().includes(kw)||(r.singer||'').toLowerCase().includes(kw)||(r.nickname||'').toLowerCase().includes(kw));if(g)rows=rows.filter(r=>String(r.gid||'').toLowerCase().includes(g));if(u)rows=rows.filter(r=>String(r.uid||'').toLowerCase().includes(u));return rows;}
-function renderRecords(){const all=filtRecords();const tp=Math.max(1,Math.ceil(all.length/recPS));if(recPage>tp)recPage=tp;const st=(recPage-1)*recPS;const rows=all.slice(st,st+recPS);const body=document.getElementById('recordsBody');if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">暂无匹配记录</td></tr>';document.getElementById('recPager').innerHTML='';return;}body.innerHTML=rows.map(r=>{const type=r.type==='play'?'<span class="badge b-play">播放</span>':'<span class="badge b-search">搜索</span>';return `<tr><td>${ts2str(r.ts)}</td><td>${type}</td><td><span class="mono">${esc(r.gid||'-')}</span></td><td><span class="mono">${esc(r.uid||'-')}</span></td><td>${esc(r.nickname||'-')}</td><td>${esc(r.keyword||'-')}</td><td>${esc(r.song||'-')}</td><td>${esc(r.singer||'-')}</td></tr>`;}).join('');renderPager(tp);}
+function chartLeave(){var v=document.getElementById('chartVLine'),h=document.getElementById('chartHLine');if(v)v.style.display='none';if(h)h.style.display='none';hideTip();}
+function chartMove(ev){var svg=document.querySelector('#chart svg');if(!svg)return;var t=ev.touches&&ev.touches[0];var cx=t?t.clientX:ev.clientX,cy=t?t.clientY:ev.clientY;if(t)ev.preventDefault();var sr=svg.getBoundingClientRect();var W=760,H=230,P=36,padR=12;var plotW=W-P*2-padR,plotH=H-P*2;var mx=(cx-sr.left)/sr.width*W,my=(cy-sr.top)/sr.height*H;mx=Math.max(P,Math.min(P+plotW,mx));my=Math.max(P,Math.min(P+plotH,my));var v=document.getElementById('chartVLine'),h=document.getElementById('chartHLine');if(v){v.setAttribute('x1',mx);v.setAttribute('x2',mx);v.setAttribute('y1',P);v.setAttribute('y2',P+plotH);v.style.display='block';}if(h){h.setAttribute('x1',P);h.setAttribute('x2',P+plotW);h.setAttribute('y1',my);h.setAttribute('y2',my);h.style.display='block';}var d=window.__chartData;if(d&&d.labels&&d.labels.length){var n=d.labels.length;var frac=n<=1?0:((mx-P)/plotW);var idx=Math.max(0,Math.min(n-1,Math.round(frac*(n-1))));if(window.__chartTipIdx!==idx){window.__chartTipIdx=idx;showTip(idx);}}}
+function scopeBadge(r){const g=r&&r.scope==='group';return '<span class="badge '+(g?'b-scope-group':'b-scope-personal')+'">'+(g?'群':'个人')+'</span>';}
+function filtRecords(){const kw=(document.getElementById('recKw').value||'').trim().toLowerCase();const type=document.getElementById('recType').value;const scope=(document.getElementById('recScope')||{}).value||'';const g=(document.getElementById('recGroupIn').value||'').trim().toLowerCase();const u=(document.getElementById('recUserIn').value||'').trim().toLowerCase();let rows=DASH.records||[];if(type)rows=rows.filter(r=>r.type===type);if(scope)rows=rows.filter(r=>(r.scope||'personal')===scope);if(kw)rows=rows.filter(r=>(r.keyword||'').toLowerCase().includes(kw)||(r.song||'').toLowerCase().includes(kw)||(r.singer||'').toLowerCase().includes(kw)||(r.nickname||'').toLowerCase().includes(kw)||(r.scope==='group'?'群':'个人').includes(kw));if(g)rows=rows.filter(r=>String(r.gid||'').toLowerCase().includes(g));if(u)rows=rows.filter(r=>String(r.uid||'').toLowerCase().includes(u));return rows;}
+function renderRecords(){const all=filtRecords();const tp=Math.max(1,Math.ceil(all.length/recPS));if(recPage>tp)recPage=tp;const st=(recPage-1)*recPS;const rows=all.slice(st,st+recPS);const body=document.getElementById('recordsBody');if(!rows.length){body.innerHTML='<tr><td colspan="9" class="empty">暂无匹配记录</td></tr>';document.getElementById('recPager').innerHTML='';return;}body.innerHTML=rows.map(r=>{const type=r.type==='play'?'<span class="badge b-play">播放</span>':'<span class="badge b-search">搜索</span>';return `<tr><td>${ts2str(r.ts)}</td><td>${type}</td><td>${scopeBadge(r)}</td><td><span class="mono">${esc(r.gid||'-')}</span></td><td><span class="mono">${esc(r.uid||'-')}</span></td><td>${esc(r.nickname||'-')}</td><td>${esc(r.keyword||'-')}</td><td>${esc(r.song||'-')}</td><td>${esc(r.singer||'-')}</td></tr>`;}).join('');renderPager(tp);}
 function renderPager(tp){const el=document.getElementById('recPager');let h=`<span class="pg">共${tp}页</span>`;h+=`<span class="pg-num ${recPage===1?'cur':''}" onclick="goRecPage(1)">«</span>`;for(let i=Math.max(1,recPage-2);i<=Math.min(tp,recPage+2);i++)h+=`<span class="pg-num ${i===recPage?'cur':''}" onclick="goRecPage(${i})">${i}</span>`;h+=`<span class="pg-num ${recPage===tp?'cur':''}" onclick="goRecPage(${tp})">»</span>`;el.innerHTML=h;}
 function goRecPage(p){recPage=p;renderRecords();}
 function renderUsers(){const body=document.getElementById('usersBody');const users=DASH.users||[];if(!users.length){body.innerHTML='<tr><td colspan="7" class="empty">暂无用户</td></tr>';return;}body.innerHTML=users.map(u=>{const key=jsq(u.user_key||'');const uid=jsq(u.user_id||'');return `<tr class="row-select" onclick="selectUser('${uid}')" title="点击选中该用户"><td>${esc(u.nickname||'（未命名）')}</td><td><span class="mono">${esc(u.user_id||'-')}</span></td><td>${lyricsBadge(u.effective_show_lyrics)}</td><td>${lyricsBadge(u.show_lyrics,'跟随全局')}</td><td>${u.searches||0}</td><td>${u.plays||0}</td><td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();editUserFromTable('${key}')">编辑</button> <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();editUserLyrics('${key}')">切换</button></td></tr>`;}).join('');}
@@ -722,13 +1189,13 @@ function handleTopGroupPick(v){renderGroupPickList('topGroupPickList',v);}
 function pickTopGroup(gid){
   const g=DASH.groups.find(x=>x.group_id===gid)||{};
   document.getElementById('topGroupInput').value=groupDisplayName(g)||gid;
-  document.getElementById('topGroupPickList').classList.remove('open');
+  closeAllPickLists();
   syncSclear(document.getElementById('topGroupInput'),document.getElementById('topGroupClear'));
   selectTopGroup(gid,true);
 }
 function clearTopGroupPick(){
   document.getElementById('topGroupInput').value='';
-  document.getElementById('topGroupPickList').classList.remove('open');
+  closeAllPickLists();
   currentGroup=null;
   document.getElementById('topGroupBar').classList.remove('show');
   syncSclear(document.getElementById('topGroupInput'),document.getElementById('topGroupClear'));
@@ -747,6 +1214,8 @@ function selectTopGroup(gid,scroll){
   const eff=g.effective_show_lyrics?'开':'关';
   const grp=g.show_lyrics===true?'开':g.show_lyrics===false?'关':'跟随';
   document.getElementById('topGroupStats').innerHTML='<span class="target-chip">生效:'+eff+'</span><span class="target-chip">群设置:'+grp+'</span><span class="target-chip">搜索:'+(g.searches||0)+'</span><span class="target-chip">播放:'+(g.plays||0)+'</span>';
+  const psel=document.getElementById('groupSourceSel');
+  if(psel)psel.value=g.music_source||'';
   bar.classList.add('show');
   if(scroll)bar.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -759,7 +1228,7 @@ function pickGroupFilter(gid){
   const g=DASH.groups.find(x=>x.group_id===gid)||{};
   document.getElementById('groupFilterIn').value=groupDisplayName(g)||gid;
   groupFilterKw=String(document.getElementById('groupFilterIn').value||'').trim().toLowerCase();
-  document.getElementById('groupFilterList').classList.remove('open');
+  closeAllPickLists();
   syncSclear(document.getElementById('groupFilterIn'),document.getElementById('groupFilterClear'));
   renderGroups();
   selectTopGroup(gid,false);
@@ -767,13 +1236,13 @@ function pickGroupFilter(gid){
 function clearGroupFilter(){
   document.getElementById('groupFilterIn').value='';
   groupFilterKw='';
-  document.getElementById('groupFilterList').classList.remove('open');
+  closeAllPickLists();
   syncSclear(document.getElementById('groupFilterIn'),document.getElementById('groupFilterClear'));
   renderGroups();
 }
 function handleEditUserSearch(v){
   const q=(v||'').trim().toLowerCase();
-  if(!q){document.getElementById('editUserList').classList.remove('open');return;}
+  if(!q){closeAllPickLists();return;}
   let arr=DASH.users||[];
   arr=arr.filter(u=>(u.nickname||'').toLowerCase().includes(q)||String(u.user_id||'').toLowerCase().includes(q)||String(u.user_key||'').toLowerCase().includes(q));
   if(!arr.length){showPickList('editUserList','<div class="pick-empty">无匹配用户</div>');return;}
@@ -783,14 +1252,14 @@ function handleEditUserSearch(v){
   }).join('');
   showPickList('editUserList',html);
 }
-function pickEditUser(user_key){const u=DASH.users.find(x=>x.user_key===user_key);if(!u)return;editUserKey=user_key;document.getElementById('editUserInput').value=u.user_id||u.user_key||'';document.getElementById('editUserList').classList.remove('open');document.getElementById('userLyricsPref').checked=!!u.effective_show_lyrics;document.getElementById('editUserHint').textContent='已选择：'+user_key;syncSclear(document.getElementById('editUserInput'),document.getElementById('editUserClear'));}
-function clearEditUser(){editUserKey='';document.getElementById('editUserInput').value='';document.getElementById('editUserList').classList.remove('open');document.getElementById('editUserHint').textContent='';document.getElementById('userLyricsPref').checked=false;syncSclear(document.getElementById('editUserInput'),document.getElementById('editUserClear'));}
+function pickEditUser(user_key){const u=DASH.users.find(x=>x.user_key===user_key);if(!u)return;editUserKey=user_key;document.getElementById('editUserInput').value=u.user_id||u.user_key||'';closeAllPickLists();const pref=document.getElementById('userLyricsPref');const personal=u.show_lyrics;pref.checked=personal===true;const hint=personal===true?'个人：开':personal===false?'个人：关':'个人：跟随（勾选后会写成显式开/关）';document.getElementById('editUserHint').textContent='已选择：'+user_key+' · '+hint;syncSclear(document.getElementById('editUserInput'),document.getElementById('editUserClear'));}
+function clearEditUser(){editUserKey='';document.getElementById('editUserInput').value='';closeAllPickLists();document.getElementById('editUserHint').textContent='';document.getElementById('userLyricsPref').checked=false;syncSclear(document.getElementById('editUserInput'),document.getElementById('editUserClear'));}
 function editUserFromTable(user_key){switchTab('users');pickEditUser(user_key);document.getElementById('editUserInput').scrollIntoView({behavior:'smooth',block:'center'});}
 async function saveUserLyrics(){if(!editUserKey){toast('请先选择用户');return;}try{const r=await fetch(API+'/user_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_key:editUserKey,show_lyrics:document.getElementById('userLyricsPref').checked})});const j=await r.json();if(j.ok){toast('已保存');await fetchData();if(currentUser&&currentUser.user_key===editUserKey)selectUser(currentUser.user_id);}else toast(j.error||'保存失败');}catch(e){toast('保存失败');}}
 async function clearUserLyricsOverride(){if(!editUserKey){toast('请先选择用户');return;}try{const r=await fetch(API+'/user_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_key:editUserKey,show_lyrics:null})});const j=await r.json();if(j.ok){toast('已恢复跟随全局');await fetchData();if(currentUser&&currentUser.user_key===editUserKey)selectUser(currentUser.user_id);}else toast(j.error||'操作失败');}catch(e){toast('操作失败');}}
 function handleUserSearch(v){
   const q=(v||'').trim().toLowerCase();
-  if(!q){document.getElementById('userList').classList.remove('open');return;}
+  if(!q){closeAllPickLists();return;}
   let arr=DASH.users||[];
   arr=arr.filter(u=>(u.nickname||'').toLowerCase().includes(q)||String(u.user_id||'').toLowerCase().includes(q)||String(u.user_key||'').toLowerCase().includes(q));
   if(!arr.length){showPickList('userList','<div class="pick-empty">无匹配用户</div>');return;}
@@ -800,18 +1269,32 @@ function handleUserSearch(v){
   }).join('');
   showPickList('userList',html);
 }
-function selectUser(uid){const u=DASH.users.find(x=>x.user_id===uid)||{};currentUser=u;document.getElementById('userSearch').value=u.user_id||u.user_key||'';syncSclear(document.getElementById('userSearch'),document.getElementById('userSearchClear'));document.getElementById('userList').classList.remove('open');const t=document.getElementById('userTarget');document.getElementById('userTargetName').textContent=u.nickname||u.user_id||'-';document.getElementById('userTargetId').textContent=u.user_key||'';const eff=u.effective_show_lyrics?'开':'关';const personal=u.show_lyrics===true?'开':u.show_lyrics===false?'关':'跟随';document.getElementById('userTargetStats').innerHTML=`<span class="target-chip">生效:${eff}</span><span class="target-chip">个人:${personal}</span><span class="target-chip">搜索:${u.searches||0}</span><span class="target-chip">播放:${u.plays||0}</span>`;t.classList.add('show');}
-function clearQuick(inp,list,target){document.getElementById(inp).value='';document.getElementById(list).classList.remove('open');document.getElementById(target).classList.remove('show');if(target==='userTarget')currentUser=null;syncSclear(document.getElementById(inp),document.getElementById(inp+'Clear'));}
+function selectUser(uid){const u=DASH.users.find(x=>x.user_id===uid)||{};currentUser=u;document.getElementById('userSearch').value=u.user_id||u.user_key||'';syncSclear(document.getElementById('userSearch'),document.getElementById('userSearchClear'));closeAllPickLists();const t=document.getElementById('userTarget');document.getElementById('userTargetName').textContent=u.nickname||u.user_id||'-';document.getElementById('userTargetId').textContent=u.user_key||'';const eff=u.effective_show_lyrics?'开':'关';const personal=u.show_lyrics===true?'开':u.show_lyrics===false?'关':'跟随';document.getElementById('userTargetStats').innerHTML=`<span class="target-chip">生效:${eff}</span><span class="target-chip">个人:${personal}</span><span class="target-chip">搜索:${u.searches||0}</span><span class="target-chip">播放:${u.plays||0}</span>`;t.classList.add('show');}
+function clearQuick(inp,list,target){document.getElementById(inp).value='';closeAllPickLists();document.getElementById(target).classList.remove('show');if(target==='userTarget')currentUser=null;syncSclear(document.getElementById(inp),document.getElementById(inp+'Clear'));}
 function clr(id){document.getElementById(id).value='';syncSclear(document.getElementById(id),document.getElementById(id+'Clear'));recPage=1;renderRecords();}
-function clearFilters(){document.getElementById('recKw').value='';document.getElementById('recType').value='';document.getElementById('recGroupIn').value='';document.getElementById('recUserIn').value='';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
-function viewUserRecords(){switchTab('records');document.getElementById('recKw').value='';document.getElementById('recType').value='';document.getElementById('recGroupIn').value='';document.getElementById('recUserIn').value=currentUser&&currentUser.user_id?currentUser.user_id:'';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
-function viewGroupRecords(){switchTab('records');document.getElementById('recKw').value='';document.getElementById('recType').value='';document.getElementById('recUserIn').value='';document.getElementById('recGroupIn').value=currentGroup&&currentGroup.group_id?currentGroup.group_id:'';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
+function clearFilters(){document.getElementById('recKw').value='';document.getElementById('recType').value='';const sc=document.getElementById('recScope');if(sc)sc.value='';document.getElementById('recGroupIn').value='';document.getElementById('recUserIn').value='';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
+function viewUserRecords(){switchTab('records');document.getElementById('recKw').value='';document.getElementById('recType').value='';const sc=document.getElementById('recScope');if(sc)sc.value='';document.getElementById('recGroupIn').value='';document.getElementById('recUserIn').value=currentUser&&currentUser.user_id?currentUser.user_id:'';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
+function viewGroupRecords(){switchTab('records');document.getElementById('recKw').value='';document.getElementById('recType').value='';const sc=document.getElementById('recScope');if(sc)sc.value='group';document.getElementById('recUserIn').value='';document.getElementById('recGroupIn').value=currentGroup&&currentGroup.group_id?currentGroup.group_id:'';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
 async function toggleGlobalLyrics(v){await fetch(API+'/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({show_lyrics:v})});fetchData();}
 async function editUserLyrics(user_key){const u=DASH.users.find(x=>x.user_key===user_key);const val=nextLyricsState(u?u.show_lyrics:null);try{const r=await fetch(API+'/user_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_key:user_key,show_lyrics:val})});const j=await r.json();if(!j.ok){toast(j.error||'操作失败');return;}toast('已更新');await fetchData();if(currentUser&&currentUser.user_key===user_key)selectUser(currentUser.user_id);}catch(e){toast('操作失败');}}
 async function toggleUserLyrics(){if(!currentUser)return;await editUserLyrics(currentUser.user_key);}
 async function setGroupLyrics(gid,v){try{const r=await fetch(API+'/group_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({group_id:gid,show_lyrics:v})});const j=await r.json();if(!j.ok){toast(j.error||'操作失败');return;}toast('已保存');await fetchData();if(gid)selectTopGroup(gid,false);}catch(e){toast('操作失败');}}
 async function toggleGroupLyrics(){if(!currentGroup)return;const val=nextLyricsState(currentGroup.show_lyrics);await setGroupLyrics(currentGroup.group_id,val);}
-async function setNewGroup(val){const gid=(document.getElementById('newGroupId').value||'').trim();if(!gid){toast('请输入群 openid');return;}const body={group_id:gid,show_lyrics:val};try{const r=await fetch(API+'/group_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json();if(!j.ok){toast(j.error||'操作失败');return;}toast('已保存');document.getElementById('newGroupId').value='';await fetchData();selectTopGroup(gid,true);}catch(e){toast('操作失败');}}
+async function setNewGroup(val){
+  const gid=(document.getElementById('newGroupId').value||'').trim();
+  if(!gid){toast('请输入群 openid');return;}
+  const body={group_id:gid};
+  if(val!=='add')body.show_lyrics=val;
+  try{
+    const r=await fetch(API+'/group_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(!j.ok){toast(j.error||'操作失败');return;}
+    toast(val===true?'已添加并开启歌词':val===false?'已添加并关闭歌词':val==='add'?'已添加群':'已添加（跟随全局）');
+    document.getElementById('newGroupId').value='';
+    await fetchData();
+    selectTopGroup(gid,true);
+  }catch(e){toast('操作失败');}
+}
 async function init(){
   initThemeBg();
   document.getElementById('chart').innerHTML='<div class="empty">加载中…</div>';
@@ -820,8 +1303,10 @@ async function init(){
   bindPickList('topGroupPickList',pickTopGroup);
   bindPickList('groupFilterList',pickGroupFilter);
   document.addEventListener('click',e=>{
-    if(!e.target.closest('.picker'))closeAllPickLists();
+    if(!e.target.closest('.picker')&&!e.target.closest('.pick-list'))closeAllPickLists();
   });
+  window.addEventListener('scroll',repositionOpenPickLists,true);
+  window.addEventListener('resize',repositionOpenPickLists);
   bindInputClear('userSearch','userSearchClear',handleUserSearch,()=>clearQuick('userSearch','userList','userTarget'));
   bindInputClear('editUserInput','editUserClear',handleEditUserSearch,clearEditUser);
   bindInputClear('groupFilterIn','groupFilterClear',handleGroupFilter,clearGroupFilter);

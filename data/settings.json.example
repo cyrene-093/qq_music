@@ -1,6 +1,8 @@
 {
   "global": {
-    "show_lyrics": true
+    "show_lyrics": true,
+    "music_source": "aa_qq",
+    "custom_source_url": ""
   },
   "stats": {
     "searches": 0,
