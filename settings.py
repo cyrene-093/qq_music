@@ -11,12 +11,14 @@ from typing import Any
 
 log = logging.getLogger('plugins.qq_music')
 
-_RECORD_CAP = 500
+_RECORD_CAP = 50
 _TOP_SONGS = 20
 
 _DEFAULT = {
     'global': {
         'show_lyrics': True,
+        'record_plays': True,
+        'record_searches': False,
         'music_source': 'aa_qq',
         'custom_source_url': '',
         'qq_cookie': '',
@@ -31,6 +33,7 @@ _DEFAULT = {
     'users': {},
     'groups': {},
     'records': [],
+    'records_cleaned_on': '',
 }
 
 
@@ -159,7 +162,16 @@ class MusicSettingsStore:
 
     # ---------- 用户 ----------
 
-    def touch_user(self, appid: str, user_id: str, nickname: str = '') -> dict[str, Any]:
+    def touch_user(
+        self,
+        appid: str,
+        user_id: str,
+        nickname: str = '',
+        avatar: str = '',
+        *,
+        persist: bool = False,
+        mark_synced: bool = False,
+    ) -> dict[str, Any]:
         key = self.user_key(appid, user_id)
         users = self._users()
         blob = users.get(key)
@@ -169,7 +181,14 @@ class MusicSettingsStore:
         nick = (nickname or '').strip()
         if nick:
             blob['nickname'] = nick
+        av = str(avatar or '').strip()
+        if av.startswith(('http://', 'https://')):
+            blob['avatar'] = av
         blob['last_seen'] = int(time.time())
+        if mark_synced:
+            blob['profile_synced_at'] = int(time.time())
+        if persist:
+            self.save()
         return blob
 
     def set_user_show_lyrics(self, appid: str, user_id: str, value: bool | None, nickname: str = '') -> bool:
@@ -243,6 +262,24 @@ class MusicSettingsStore:
         self.save()
         return bool(value)
 
+    def get_record_plays(self) -> bool:
+        """点歌记录是否写入「听 N」播放流水（默认开）。"""
+        return bool(self._global().get('record_plays', True))
+
+    def set_record_plays(self, value: bool) -> bool:
+        self._global()['record_plays'] = bool(value)
+        self.save()
+        return bool(value)
+
+    def get_record_searches(self) -> bool:
+        """是否额外写入搜索关键字流水（默认关）。"""
+        return bool(self._global().get('record_searches', False))
+
+    def set_record_searches(self, value: bool) -> bool:
+        self._global()['record_searches'] = bool(value)
+        self.save()
+        return bool(value)
+
     def get_custom_source_url(self) -> str:
         return str(self._global().get('custom_source_url') or '').strip()
 
@@ -310,16 +347,31 @@ class MusicSettingsStore:
                 blob = self.touch_group(gid)
                 blob.pop('music_source', None)
                 self.save()
+                try:
+                    from plugins.qq_music.service import clear_keyword_cache
+                    clear_keyword_cache()
+                except Exception:
+                    pass
                 return self.get_music_source('')
             if sid not in known_source_ids(self.get_custom_source_url()):
                 sid = get_source(sid, self.get_custom_source_url()).id
             self.touch_group(gid)['music_source'] = sid
             self.save()
+            try:
+                from plugins.qq_music.service import clear_keyword_cache
+                clear_keyword_cache()
+            except Exception:
+                pass
             return sid
         if sid not in known_source_ids(self.get_custom_source_url()):
             sid = get_source(sid, self.get_custom_source_url()).id
         self._global()['music_source'] = sid
         self.save()
+        try:
+            from plugins.qq_music.service import clear_keyword_cache
+            clear_keyword_cache()
+        except Exception:
+            pass
         return sid
 
     # ---------- 统计与记录 ----------
@@ -334,6 +386,30 @@ class MusicSettingsStore:
         if len(records) > _RECORD_CAP:
             del records[: len(records) - _RECORD_CAP]
 
+    def _trim_records(self) -> int:
+        """只保留最近 _RECORD_CAP 条，返回删除条数。"""
+        records = self._records()
+        overflow = len(records) - _RECORD_CAP
+        if overflow <= 0:
+            return 0
+        del records[:overflow]
+        return overflow
+
+    def cleanup_records(self, *, force: bool = False) -> int:
+        """每天最多清理一次（或 force）；只保留最近 50 条。返回删除条数。"""
+        from datetime import date
+
+        today = date.today().isoformat()
+        last = str(self._data.get('records_cleaned_on') or '').strip()
+        if not force and last == today:
+            return 0
+        removed = self._trim_records()
+        self._data['records_cleaned_on'] = today
+        self.save()
+        if removed:
+            log.info('点歌记录已清理：删除 %s 条，保留最近 %s 条', removed, _RECORD_CAP)
+        return removed
+
     def bump(self, field: str, amount: int = 1) -> None:
         stats = self._stats()
         stats[field] = int(stats.get(field, 0) or 0) + amount
@@ -346,24 +422,32 @@ class MusicSettingsStore:
         uid: str = '',
         gid: str = '',
         nickname: str = '',
+        avatar: str = '',
         scope: str = 'personal',
     ) -> None:
         scope = 'group' if scope == 'group' else 'personal'
         self._inc(self._stats(), 'searches')
         if appid or uid:
-            self._inc(self.touch_user(appid, uid, nickname), 'searches')
+            self._inc(self.touch_user(appid, uid, nickname, avatar=avatar), 'searches')
         if gid:
             self._inc(self.touch_group(gid), 'searches')
-        self._append_record({
-            'ts': int(time.time()),
-            'type': 'search',
-            'scope': scope,
-            'appid': appid,
-            'uid': uid,
-            'gid': gid,
-            'nickname': (nickname or '').strip(),
-            'keyword': (keyword or '').strip(),
-        })
+        av = str(avatar or '').strip()
+        if not av.startswith(('http://', 'https://')) and (appid or uid):
+            blob = self._users().get(self.user_key(appid, uid))
+            if isinstance(blob, dict):
+                av = str(blob.get('avatar') or '').strip()
+        if self.get_record_searches():
+            self._append_record({
+                'ts': int(time.time()),
+                'type': 'search',
+                'scope': scope,
+                'appid': appid,
+                'uid': uid,
+                'gid': gid,
+                'nickname': (nickname or '').strip(),
+                'avatar': av if av.startswith(('http://', 'https://')) else '',
+                'keyword': (keyword or '').strip(),
+            })
         self.save()
 
     def record_play(
@@ -375,6 +459,7 @@ class MusicSettingsStore:
         uid: str = '',
         gid: str = '',
         nickname: str = '',
+        avatar: str = '',
         cover: str = '',
         url: str = '',
         scope: str = 'personal',
@@ -382,7 +467,7 @@ class MusicSettingsStore:
         scope = 'group' if scope == 'group' else 'personal'
         self._inc(self._stats(), 'plays')
         if appid or uid:
-            self._inc(self.touch_user(appid, uid, nickname), 'plays')
+            self._inc(self.touch_user(appid, uid, nickname, avatar=avatar), 'plays')
         if gid:
             self._inc(self.touch_group(gid), 'plays')
         name = (song or '').strip() or '未知'
@@ -393,9 +478,16 @@ class MusicSettingsStore:
             stats[skey] = {'song': name, 'singer': singer_txt, 'count': 0}
         if cover and not stats[skey].get('cover'):
             stats[skey]['cover'] = cover
-        if url and not stats[skey].get('url'):
-            stats[skey]['url'] = url
+        music_url = str(url or '').strip()
+        if music_url.startswith(('http://', 'https://')):
+            stats[skey]['url'] = music_url
         stats[skey]['count'] = int(stats[skey].get('count', 0) or 0) + 1
+        av = str(avatar or '').strip()
+        if not av.startswith(('http://', 'https://')) and (appid or uid):
+            blob = self._users().get(self.user_key(appid, uid))
+            if isinstance(blob, dict):
+                av = str(blob.get('avatar') or '').strip()
+        # 点歌记录以「听 N」为准：完整歌名 + 歌曲原链接
         self._append_record({
             'ts': int(time.time()),
             'type': 'play',
@@ -404,9 +496,12 @@ class MusicSettingsStore:
             'uid': uid,
             'gid': gid,
             'nickname': (nickname or '').strip(),
+            'avatar': av if av.startswith(('http://', 'https://')) else '',
             'keyword': (keyword or '').strip(),
             'song': name,
             'singer': singer_txt,
+            'cover': (cover or '').strip(),
+            'url': music_url if music_url.startswith(('http://', 'https://')) else '',
         })
         self.save()
 
@@ -416,20 +511,36 @@ class MusicSettingsStore:
     def record_lyric_skipped(self) -> None:
         self.bump('lyrics_skipped')
 
-    def records_view(self, rec_type: str = '', limit: int = 200) -> list[dict[str, Any]]:
+    def records_view(self, rec_type: str = '', limit: int = 50) -> list[dict[str, Any]]:
         try:
-            limit = max(1, min(int(limit or 200), _RECORD_CAP))
+            limit = max(1, min(int(limit or _RECORD_CAP), _RECORD_CAP))
         except (TypeError, ValueError):
-            limit = 200
+            limit = _RECORD_CAP
         records = self._records()
         if rec_type in ('search', 'play'):
             records = [r for r in records if r.get('type') == rec_type]
         out: list[dict[str, Any]] = []
+        users = self._users()
         for rec in records[-limit:][::-1]:
             if not isinstance(rec, dict):
                 continue
             item = dict(rec)
             item['scope'] = 'group' if item.get('scope') == 'group' else 'personal'
+            av = str(item.get('avatar') or '').strip()
+            appid = str(item.get('appid') or '').strip()
+            uid = str(item.get('uid') or '').strip()
+            if not av.startswith(('http://', 'https://')):
+                if appid or uid:
+                    blob = users.get(self.user_key(appid, uid))
+                    if isinstance(blob, dict):
+                        av = str(blob.get('avatar') or '').strip()
+            if not av.startswith(('http://', 'https://')) and appid and uid:
+                av = f'https://q.qlogo.cn/qqapp/{appid}/{uid}/100'
+            item['avatar'] = av if av.startswith(('http://', 'https://')) else ''
+            if not item.get('nickname'):
+                blob = users.get(self.user_key(appid, uid)) if (appid or uid) else None
+                if isinstance(blob, dict) and blob.get('nickname'):
+                    item['nickname'] = blob.get('nickname')
             out.append(item)
         return out
 
@@ -855,11 +966,15 @@ class MusicSettingsStore:
             appid, uid = (key.split(':', 1) + [''])[:2]
             override = blob.get('show_lyrics')
             effective = self.should_show_lyrics(appid, uid, '')
+            av = str(blob.get('avatar') or '').strip()
+            if not av.startswith(('http://', 'https://')) and appid and uid:
+                av = f'https://q.qlogo.cn/qqapp/{appid}/{uid}/100'
             user_list.append({
                 'user_key': key,
                 'appid': appid,
                 'user_id': uid,
                 'nickname': blob.get('nickname') or '',
+                'avatar': av if av.startswith(('http://', 'https://')) else '',
                 'show_lyrics': override,
                 'effective_show_lyrics': bool(effective),
                 'last_seen': blob.get('last_seen'),
@@ -913,6 +1028,8 @@ class MusicSettingsStore:
 
         pub_global = {
             'show_lyrics': bool(self._global().get('show_lyrics', True)),
+            'record_plays': bool(self._global().get('record_plays', True)),
+            'record_searches': bool(self._global().get('record_searches', False)),
             'music_source': str(self._global().get('music_source') or 'aa_qq'),
             'custom_source_url': str(self._global().get('custom_source_url') or ''),
         }
@@ -922,7 +1039,7 @@ class MusicSettingsStore:
             'users': user_list,
             'groups': group_list,
             'top_songs': top[:_TOP_SONGS],
-            'recent_records': self.records_view('', 10),
+            'recent_records': self.records_view('play', 10),
             'records': self.records_view('', 50),
             'user_count': len(user_list),
             'group_count': len(group_list),

@@ -18,9 +18,27 @@ log = logging.getLogger('plugins.qq_music')
 _API = 'https://a.aa.cab/qq.music'
 _QQ_LYRIC = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'
 _QQ_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    'Referer': 'https://y.qq.com',
+    'User-Agent': (
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    ),
+    'Referer': 'https://y.qq.com/',
+    'Origin': 'https://y.qq.com',
+    'Accept': 'application/json, text/plain, */*',
 }
+# 第三方 / 落月歌词兜底（QQ：mid=songmid 或 id=数字；网易：id=数字）
+_LYRIC_QQ_MID = (
+    'https://api.vkeys.cn/v2/music/tencent/lyric?mid={mid}',
+    'https://api.epdd.cn/v2/music/tencent/lyric?mid={mid}',
+)
+_LYRIC_QQ_ID = (
+    'https://api.vkeys.cn/v2/music/tencent/lyric?id={id}',
+    'https://api.epdd.cn/v2/music/tencent/lyric?id={id}',
+)
+_LYRIC_FALLBACKS_NE = (
+    'https://api.vkeys.cn/v2/music/netease/lyric?id={id}',
+    'https://api.epdd.cn/v2/music/netease/lyric?id={id}',
+)
 _STRIP_TBL = str.maketrans('', '', '"\'<>&*_~`[](){}\\/:')
 _CACHE_CAP = 100
 _SEARCH_TTL_SEC = 180
@@ -31,6 +49,7 @@ _LYRIC_TRANS_MAX_LINES = 80
 _LRC_LINE_RE = re.compile(r'\[(\d+):(\d+(?:\.\d+)?)\](.*)')
 _META_PREFIXES = (
     '作词', '作曲', '编曲', '制作人', '混音', '录音', '监制', '统筹',
+    '词：', '曲：', '词:', '曲:',
     'Lyrics by', 'Composed by', 'Written by', 'Produced by',
 )
 
@@ -199,6 +218,11 @@ def _kw_cache_put(keyword: str, songs: list[dict[str, Any]]) -> None:
         _kw_cache.popitem(last=False)
 
 
+def clear_keyword_cache() -> None:
+    """换源后清空关键词搜索缓存，避免旧源结果串台。"""
+    _kw_cache.clear()
+
+
 def _clean_show(text: str, limit: int = 50) -> str:
     return (text or '未知').translate(_STRIP_TBL).strip()[:limit] or '未知'
 
@@ -307,12 +331,6 @@ def peer_prompt_keyword(peer: dict[str, Any] | None, index: int = 0) -> str:
     return str(peer.get('keyword') or '').strip()
 
 
-def _decode_lrc_b64(raw_b64: str) -> str:
-    if not raw_b64:
-        return ''
-    return base64.b64decode(raw_b64).decode('utf-8', errors='replace')
-
-
 def _should_skip_lyric_line(lyric: str) -> bool:
     if any(lyric.startswith(p) for p in _META_PREFIXES):
         return True
@@ -335,35 +353,265 @@ def _parse_lrc(text: str) -> list[tuple[float, str]]:
     return lines
 
 
-async def fetch_qq_lyrics(songmid: str) -> LyricBundle:
-    mid = (songmid or '').strip()
-    if not mid:
-        return LyricBundle()
-    try:
-        c = await _http()
-        resp = await c.get(
-            _QQ_LYRIC,
-            params={'format': 'json', 'songmid': mid},
-            headers=_QQ_HEADERS,
-        )
-        body = resp.json()
-        if not isinstance(body, dict):
-            return LyricBundle()
-        lines = _parse_lrc(_decode_lrc_b64(body.get('lyric') or ''))
-        trans_raw = body.get('trans') or ''
-        trans_lines = _parse_lrc(_decode_lrc_b64(trans_raw)) if trans_raw else []
-        return LyricBundle(lines=lines, trans_lines=trans_lines)
-    except Exception:
-        log.debug('歌词获取失败 mid=%s', mid)
-        return LyricBundle()
-
-
 def _trans_at(trans_lines: list[tuple[float, str]], sec: float) -> str | None:
     key = round(sec, 1)
     for t_sec, text in trans_lines:
         if round(t_sec, 1) == key:
             return text
     return None
+
+
+def _decode_lrc_b64(raw_b64: str) -> str:
+    """官方接口多为 base64；若已是明文 LRC 则原样返回。"""
+    raw = (raw_b64 or '').strip()
+    if not raw:
+        return ''
+    # 明文 LRC / 含时间轴
+    if raw.startswith('[') or re.search(r'\[\d+:\d+', raw[:80]):
+        return raw
+    try:
+        txt = base64.b64decode(raw).decode('utf-8', errors='replace')
+    except Exception:
+        return raw
+    return txt or raw
+
+
+def _is_qq_songmid(mid: str) -> bool:
+    m = (mid or '').strip()
+    if not m or m.isdigit():
+        return False
+    # QQ songmid 常见 14 位左右字母数字
+    return len(m) >= 8 and bool(re.fullmatch(r'[0-9A-Za-z]+', m))
+
+
+def _extract_lrc_text(payload: Any) -> str:
+    if payload is None:
+        return ''
+    if isinstance(payload, str):
+        return payload.strip()
+    if isinstance(payload, dict):
+        for key in ('lrc', 'lyric', 'lyrics', 'lyric_str'):
+            val = payload.get(key)
+            if isinstance(val, dict):
+                # 网易风格 { lyric: "..." }
+                inner = val.get('lyric') or val.get('lrc') or val.get('text') or ''
+                if inner:
+                    return str(inner).strip()
+            elif val:
+                return str(val).strip()
+        data = payload.get('data')
+        if data is not None and data is not payload:
+            return _extract_lrc_text(data)
+    return ''
+
+
+def _bundle_from_raw(raw: str) -> LyricBundle:
+    text = _decode_lrc_b64(raw)
+    if not text:
+        return LyricBundle()
+    # 可能整段再套一层 base64
+    if not re.search(r'\[\d+:\d+', text[:120]) and re.fullmatch(r'[A-Za-z0-9+/=\s]+', text[:80] or ''):
+        text = _decode_lrc_b64(text)
+    lines = _parse_lrc(text)
+    return LyricBundle(lines=lines) if lines else LyricBundle()
+
+
+async def fetch_qq_lyrics(songmid: str) -> LyricBundle:
+    mid = (songmid or '').strip()
+    if not _is_qq_songmid(mid):
+        return LyricBundle()
+    try:
+        c = await _http()
+        resp = await c.get(
+            _QQ_LYRIC,
+            params={'format': 'json', 'nobase64': '0', 'songmid': mid},
+            headers=_QQ_HEADERS,
+        )
+        body = resp.json()
+        if not isinstance(body, dict):
+            return LyricBundle()
+        code = body.get('retcode', body.get('code', 0))
+        try:
+            if int(code) not in (0, 200):
+                log.debug('QQ 歌词接口拒绝 mid=%s code=%s', mid, code)
+                return LyricBundle()
+        except (TypeError, ValueError):
+            pass
+        lines = _parse_lrc(_decode_lrc_b64(str(body.get('lyric') or '')))
+        trans_raw = body.get('trans') or ''
+        trans_lines = _parse_lrc(_decode_lrc_b64(str(trans_raw))) if trans_raw else []
+        if not lines:
+            return LyricBundle()
+        return LyricBundle(lines=lines, trans_lines=trans_lines)
+    except Exception:
+        log.debug('歌词获取失败 mid=%s', mid, exc_info=True)
+        return LyricBundle()
+
+
+async def _fetch_lrc_url(url: str) -> str:
+    if not url or '{' in url:
+        return ''
+    try:
+        from plugins.qq_music.sources import _get_json, _unwrap
+
+        body = await _get_json(url)
+        data = _unwrap(body)
+        return _extract_lrc_text(data) or _extract_lrc_text(body)
+    except Exception:
+        log.debug('歌词 URL 拉取失败 url=%s', url, exc_info=True)
+        return ''
+
+
+async def _lyric_from_fallbacks(urls: tuple[str, ...], **params: str) -> LyricBundle:
+    for tmpl in urls:
+        try:
+            url = tmpl.format(**{k: urllib.parse.quote(str(v), safe='') for k, v in params.items() if v})
+        except Exception:
+            continue
+        if '{' in url:
+            continue
+        raw = await _fetch_lrc_url(url)
+        bundle = _bundle_from_raw(raw)
+        if bundle.lines:
+            return bundle
+    return LyricBundle()
+
+
+async def _lyric_qq_by_ids(*, mid: str = '', sid: str = '') -> LyricBundle:
+    mid = (mid or '').strip()
+    sid = (sid or '').strip()
+    if mid and not mid.isdigit():
+        bundle = await _lyric_from_fallbacks(_LYRIC_QQ_MID, mid=mid)
+        if bundle.lines:
+            return bundle
+    if sid and sid.isdigit():
+        bundle = await _lyric_from_fallbacks(_LYRIC_QQ_ID, id=sid)
+        if bundle.lines:
+            return bundle
+    # 少数接口把数字 songid 当 mid 传不通，再试 id=mid（仅数字）
+    if mid and mid.isdigit():
+        return await _lyric_from_fallbacks(_LYRIC_QQ_ID, id=mid)
+    return LyricBundle()
+
+
+async def _lyric_by_song_search(song: str, singer: str = '') -> LyricBundle:
+    """无 mid/id 时：用落月搜 QQ 曲目再拉歌词（第三方兜底）。"""
+    name = (song or '').strip()
+    if not name or name == '未知':
+        return LyricBundle()
+    try:
+        from plugins.qq_music.sources import _get_json, _unwrap, _norm_search_item, get_source
+
+        src = get_source('vkeys_qq')
+        url = src.search_url.replace('{msg}', urllib.parse.quote(name)).replace(
+            '{word}', urllib.parse.quote(name)
+        )
+        body = await _get_json(url)
+        data = _unwrap(body)
+        rows = data if isinstance(data, list) else []
+        if isinstance(data, dict):
+            rows = data.get('list') or data.get('songs') or []
+        if not isinstance(rows, list):
+            return LyricBundle()
+        singer_key = (singer or '').strip().split('/')[0].strip()
+        pick = None
+        for i, item in enumerate(rows[:8]):
+            if not isinstance(item, dict):
+                continue
+            row = _norm_search_item(src, item, i + 1)
+            title = str(row.get('song') or '')
+            if name not in title and title not in name:
+                continue
+            if singer_key and singer_key not in str(row.get('singer') or ''):
+                if pick is None:
+                    pick = row
+                continue
+            pick = row
+            break
+        if pick is None and rows and isinstance(rows[0], dict):
+            pick = _norm_search_item(src, rows[0], 1)
+        if not pick:
+            return LyricBundle()
+        tid = str(pick.get('id') or '').strip()
+        pmid = str(pick.get('mid') or '').strip()
+        return await _lyric_qq_by_ids(mid=pmid, sid=tid)
+    except Exception:
+        log.debug('按歌名搜歌词失败 song=%s', name, exc_info=True)
+        return LyricBundle()
+
+
+async def resolve_song_lyrics(data: dict[str, Any]) -> LyricBundle:
+    """多路兜底：官方 QQ → 落月 QQ(mid/id) → 网易 → 当前源 lyric_url → 歌名搜索。"""
+    mid = str(data.get('mid') or '').strip()
+    sid = str(data.get('id') or '').strip()
+    song = str(data.get('song') or '').strip()
+    singer = str(data.get('singer') or '').strip()
+
+    # 1) QQ 官方（第三方 aa 返回的就是 songmid）
+    if _is_qq_songmid(mid):
+        bundle = await fetch_qq_lyrics(mid)
+        if bundle.lines:
+            return bundle
+        bundle = await _lyric_qq_by_ids(mid=mid, sid=sid)
+        if bundle.lines:
+            return bundle
+
+    # 2) 数字 id：网易优先，再试 QQ 数字 songid
+    nid = sid if sid.isdigit() else (mid if mid.isdigit() else '')
+    if nid:
+        bundle = await _lyric_from_fallbacks(_LYRIC_FALLBACKS_NE, id=nid)
+        if bundle.lines:
+            return bundle
+        bundle = await _lyric_qq_by_ids(sid=nid)
+        if bundle.lines:
+            return bundle
+
+    # 3) 已有 mid/sid 但官方未命中时再扫落月
+    if mid or sid:
+        bundle = await _lyric_qq_by_ids(mid=mid, sid=sid)
+        if bundle.lines:
+            return bundle
+
+    # 4) 当前播放源自带 lyric_url
+    try:
+        from plugins.qq_music.settings import get_store
+        from plugins.qq_music.sources import fetch_source_lrc, get_source
+
+        store = get_store()
+        play_sid = str(
+            data.get('_play_source') or data.get('_source') or store.get_music_source('')
+        )
+        src = get_source(play_sid, store.get_custom_source_url())
+        raw = await fetch_source_lrc(src, data)
+        bundle = _bundle_from_raw(raw)
+        if bundle.lines:
+            return bundle
+        origin = str(data.get('_origin_source') or data.get('_source') or '').strip()
+        if origin and origin != play_sid:
+            raw2 = await fetch_source_lrc(get_source(origin, store.get_custom_source_url()), data)
+            bundle = _bundle_from_raw(raw2)
+            if bundle.lines:
+                return bundle
+    except Exception:
+        log.debug('源 lyric_url 拉取失败', exc_info=True)
+
+    # 5) 最后：按歌名到落月搜一条再取词（覆盖无 mid 的第三方曲）
+    return await _lyric_by_song_search(song, singer)
+
+
+async def fetch_play_with_lyric(
+    uid: str,
+    appid: str,
+    group_id: str,
+    index: int,
+    *,
+    shared: bool = False,
+) -> tuple[dict[str, Any] | None, LyricBundle, str | None]:
+    data, err = await fetch_play_data(uid, appid, group_id, index, shared=shared)
+    if not data:
+        return None, LyricBundle(), err
+    lyrics = await resolve_song_lyrics(data)
+    return data, lyrics, None
 
 
 def can_show_trans_in_markdown(bundle: LyricBundle) -> bool:
@@ -563,37 +811,6 @@ async def fetch_play_data(
     data['_keyword'] = keyword
     data['_scope'] = 'group' if shared else 'personal'
     return data, None
-
-
-async def fetch_play_with_lyric(
-    uid: str,
-    appid: str,
-    group_id: str,
-    index: int,
-    *,
-    shared: bool = False,
-) -> tuple[dict[str, Any] | None, LyricBundle, str | None]:
-    from plugins.qq_music.settings import get_store
-    from plugins.qq_music.sources import fetch_source_lrc, get_source
-
-    data, err = await fetch_play_data(uid, appid, group_id, index, shared=shared)
-    if not data:
-        return None, LyricBundle(), err
-    mid = str(data.get('mid') or '').strip()
-    lyrics = LyricBundle()
-    # QQ 歌词接口只要 songmid（非纯数字）；网易云数字 id 不要误请求
-    if mid and not mid.isdigit() and len(mid) >= 8:
-        lyrics = await fetch_qq_lyrics(mid)
-    if not lyrics.lines:
-        store = get_store()
-        play_sid = str(
-            data.get('_play_source') or data.get('_source') or store.get_music_source(group_id)
-        )
-        src = get_source(play_sid, store.get_custom_source_url())
-        raw = await fetch_source_lrc(src, data)
-        if raw:
-            lyrics = LyricBundle(lines=_parse_lrc(raw))
-    return data, lyrics, None
 
 
 def format_search_list(

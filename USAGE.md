@@ -1,4 +1,4 @@
-# 使用说明
+﻿# 使用说明
 
 ## 1. 安装
 
@@ -210,16 +210,20 @@ https://example.com/qq.music?msg={msg}&n={n}
 
 ## 9. 源码与目录说明
 
+仓库根目录即插件目录（安装后路径为 `plugins/qq_music/`）。
+
 | 路径 | 作用 |
 | --- | --- |
 | `main.py` | 插件入口。注册 `#点歌`、`#群点歌`、`#听N`、`#歌源`、歌词相关指令；处理消息回复；加载/卸载时注册 Web 面板 |
 | `service.py` | 核心业务。搜索结果缓存、发起播放、拉取/解析 LRC、拼装搜索列表与播放详情文案、按钮定义 |
 | `sources.py` | 歌源层。定义内置源与别名、解析 `#歌源` 参数、对各源执行搜索/播放，失败或试听时自动备用 |
-| `official_qq.py` | QQ 官方搜索。直连 y.qq.com 相关接口；不负责对外提供 Cookie 配置 |
+| `official_qq.py` | QQ 官方搜索。直连 y.qq.com 相关接口 |
 | `settings.py` | 数据存储。读写全局/群/用户设置、点歌统计、记录、群备注相关数据 |
 | `web_panel.py` | Web API。给管理面板提供设置、歌源、统计、记录、用户/群管理接口 |
 | `panel.html` | 管理面板页面。歌源选择、自定义接口、统计图表、记录筛选、用户与群控制 |
-| `assets/bg/` | 面板背景图目录。`day.jpg` / `night.jpg`，可替换 |
+| `assets/bg/README.md` | 背景图说明 |
+| `assets/bg/day.jpg` | 日间背景（可选，需自行放入） |
+| `assets/bg/night.jpg` | 夜间背景（可选，需自行放入） |
 | `data/README.md` | 运行时数据目录说明 |
 | `data/settings.json.example` | 空白配置示例，供参考结构 |
 | `data/settings.json` | **运行时生成**。真实配置与用户数据，发布时不要上传 |
@@ -227,11 +231,13 @@ https://example.com/qq.music?msg={msg}&n={n}
 | `LICENSE` | MIT 许可证全文 |
 | `README.md` | 简介、安装、目录 |
 | `USAGE.md` | 本使用说明 |
+| `PUBLISH.md` | 开源上架说明 |
+| `.gitignore` | 忽略运行时数据与缓存 |
 
 ---
 
 ## 10. 版本与声明
 
-当前版本：**1.9.5**
+当前版本：**1.9.8**
 
 音源可用性与音质取决于上游接口，不保证永久可用或全部歌曲完整可播。请遵守当地法律法规与版权要求，本插件仅供学习与交流。

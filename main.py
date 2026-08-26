@@ -1,8 +1,10 @@
-"""QQ 音乐点歌插件：搜索、真实音源、歌词显示开关（个人/群/全局）。"""
+﻿"""QQ 音乐点歌插件：搜索、真实音源、歌词显示开关（个人/群/全局）。"""
 
 from __future__ import annotations
 
+import asyncio
 import os
+import time
 
 from core.base.logger import PLUGIN, get_logger
 from core.message.event import INTERACTION_CREATE
@@ -59,13 +61,29 @@ __plugin_meta__ = {
     'name': 'QQ音乐点歌',
     'author': '飞行漂绒',
     'description': 'QQ 点歌：个人/群点歌、多歌源、LRC、Web 面板。第三方音源，请遵守版权，建议自用娱乐。',
-    'version': '1.9.5',
+    'version': '1.9.8',
     'license': 'MIT',
     # 上架市场前改成你的真实仓库地址
     'github': '',
 }
 
 log = get_logger(PLUGIN, 'qq_music')
+
+_cleanup_task: asyncio.Task | None = None
+
+
+async def _records_cleanup_loop() -> None:
+    """每小时检查一次，跨天时把点歌记录裁到最近 50 条。"""
+    log.info('点歌记录每日清理任务已启动')
+    while True:
+        try:
+            await asyncio.sleep(3600)
+            get_store().cleanup_records()
+        except asyncio.CancelledError:
+            log.info('点歌记录每日清理任务已停止')
+            raise
+        except Exception:
+            log.exception('点歌记录清理异常')
 
 
 def _ensure_web_page(*, quiet: bool = False) -> bool:
@@ -135,8 +153,141 @@ def _nickname(event) -> str:
     return str(getattr(event, 'username', '') or '').strip()
 
 
-def _touch_user(event) -> None:
-    get_store().touch_user(_appid(event), _session_uid(event), _nickname(event))
+def _qq_user_avatar(appid: str, openid: str, size: int = 100) -> str:
+    """官方机器人用户头像（与框架欢迎模板一致）。"""
+    aid = str(appid or '').strip()
+    oid = str(openid or '').strip()
+    if not aid or not oid:
+        return ''
+    return f'https://q.qlogo.cn/qqapp/{aid}/{oid}/{size}'
+
+
+def _avatar(event) -> str:
+    """尽量从事件取用户头像；没有则按 appid+openid 拼 QQ 头像地址。"""
+    for key in ('avatar', 'avatar_url', 'head_img', 'avatarUrl'):
+        v = str(getattr(event, key, '') or '').strip()
+        if v.startswith(('http://', 'https://')):
+            return v
+    raw = getattr(event, 'raw', None)
+    d = None
+    if isinstance(raw, dict):
+        d = raw.get('d') if isinstance(raw.get('d'), dict) else raw
+    buckets: list[dict] = []
+    if isinstance(d, dict):
+        for key in ('author', 'member', 'user', 'operator'):
+            node = d.get(key)
+            if isinstance(node, dict):
+                buckets.append(node)
+                nested = node.get('user') if isinstance(node.get('user'), dict) else None
+                if nested:
+                    buckets.append(nested)
+        member = d.get('member')
+        if isinstance(member, dict) and isinstance(member.get('user'), dict):
+            buckets.append(member['user'])
+    for node in buckets:
+        for key in ('avatar', 'avatar_url', 'head_img', 'icon', 'avatarUrl', 'url'):
+            v = str(node.get(key) or '').strip()
+            if v.startswith(('http://', 'https://')):
+                return v
+    getter = getattr(event, 'get', None)
+    if callable(getter):
+        for path in (
+            'd/author/avatar',
+            'author/avatar',
+            'd/author/avatar_url',
+            'd/member/user/avatar',
+            'd/member/avatar',
+            'd/user/avatar',
+        ):
+            try:
+                v = str(getter(path) or '').strip()
+            except Exception:
+                v = ''
+            if v.startswith(('http://', 'https://')):
+                return v
+    return _qq_user_avatar(_appid(event), _session_uid(event))
+
+
+def _profile_from_member(member: dict) -> tuple[str, str]:
+    """从 get_group_member 返回里提取昵称与头像。"""
+    nick = ''
+    av = ''
+    buckets: list[dict] = [member]
+    user = member.get('user')
+    if isinstance(user, dict):
+        buckets.append(user)
+    for node in buckets:
+        if not nick:
+            nick = str(
+                node.get('username')
+                or node.get('nick')
+                or node.get('nickname')
+                or node.get('name')
+                or ''
+            ).strip()
+        if not av:
+            for key in ('avatar', 'avatar_url', 'head_img', 'avatarUrl', 'icon'):
+                v = str(node.get(key) or '').strip()
+                if v.startswith(('http://', 'https://')):
+                    av = v
+                    break
+    return nick, av
+
+
+async def _touch_user(event) -> tuple[str, str]:
+    """指令触发时写入昵称与头像，返回最终 (nickname, avatar)。"""
+    store = get_store()
+    appid = _appid(event)
+    uid = _session_uid(event)
+    gid = _gid(event)
+    nick = _nickname(event)
+    av = _avatar(event)
+    key = store.user_key(appid, uid)
+    blob = store._users().get(key)
+    stored_av = ''
+    stored_nick = ''
+    synced_at = 0
+    if isinstance(blob, dict):
+        stored_av = str(blob.get('avatar') or '').strip()
+        stored_nick = str(blob.get('nickname') or '').strip()
+        try:
+            synced_at = int(blob.get('profile_synced_at') or 0)
+        except (TypeError, ValueError):
+            synced_at = 0
+    # 群内补充昵称（头像优先用 qqapp 直链，一般已可用）
+    stale = (int(time.time()) - synced_at) > 6 * 3600
+    mark_synced = False
+    if gid and (not nick or stale):
+        sender = getattr(event, 'sender', None)
+        getter = getattr(sender, 'get_group_member', None) if sender else None
+        if callable(getter):
+            try:
+                member = await getter(gid, uid)
+                if isinstance(member, dict):
+                    api_nick, api_av = _profile_from_member(member)
+                    if api_nick:
+                        nick = api_nick
+                    if api_av:
+                        av = api_av
+                    mark_synced = True
+            except Exception:
+                log.debug('拉取群成员资料失败 gid=%s uid=%s', gid, uid, exc_info=True)
+    if not nick:
+        nick = stored_nick
+    if not av.startswith(('http://', 'https://')):
+        if stored_av.startswith(('http://', 'https://')):
+            av = stored_av
+        else:
+            av = _qq_user_avatar(appid, uid)
+    store.touch_user(
+        appid,
+        uid,
+        nick,
+        avatar=av,
+        persist=True,
+        mark_synced=mark_synced or bool(av),
+    )
+    return nick, av
 
 
 _GROUP_LYRIC_OFF_MSG = (
@@ -240,7 +391,7 @@ async def _send_music_audio(event, music_url: str, data: dict, caption: str, but
 
 
 async def _play_song(event, index: int, *, shared: bool = False) -> None:
-    _touch_user(event)
+    nick, av = await _touch_user(event)
     uid, appid, gid = _session_uid(event), _appid(event), _gid(event)
     store = get_store()
     btns = group_play_buttons() if shared else play_buttons()
@@ -297,7 +448,8 @@ async def _play_song(event, index: int, *, shared: bool = False) -> None:
         appid=appid,
         uid=uid,
         gid=gid,
-        nickname=_nickname(event),
+        nickname=nick,
+        avatar=av,
         cover=_song_cover_url(data),
         url=music_url,
         scope='group' if shared else 'personal',
@@ -359,16 +511,28 @@ async def _play_song(event, index: int, *, shared: bool = False) -> None:
 
 @on_load
 async def _boot():
+    global _cleanup_task
     # 先挂页面，再初始化存储，避免 store 异常导致侧边栏页丢失
     _ensure_web_page()
     try:
-        get_store()
+        store = get_store()
+        store.cleanup_records(force=True)
     except Exception:
         log.exception('初始化点歌设置失败')
+    if _cleanup_task is None or _cleanup_task.done():
+        _cleanup_task = asyncio.create_task(_records_cleanup_loop())
 
 
 @on_unload
 async def _shutdown():
+    global _cleanup_task
+    if _cleanup_task and not _cleanup_task.done():
+        _cleanup_task.cancel()
+        try:
+            await _cleanup_task
+        except asyncio.CancelledError:
+            pass
+    _cleanup_task = None
     try:
         await aclose()
     except Exception:
@@ -379,7 +543,7 @@ async def _shutdown():
 
 @handler(rf'^{_P}音乐帮助$', name='#音乐帮助', desc='查看 QQ 音乐点歌用法', priority=28, block=True)
 async def cmd_music_help(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     await _reply_md(event, format_help_markdown(), buttons=help_buttons())
 
 
@@ -391,7 +555,7 @@ def _can_switch_source(event) -> bool:
 
 @handler(rf'^{_P}(?:切换)?歌源\s*(.*)$', name='#歌源', desc='查看或切换点歌音源', priority=27, block=True)
 async def cmd_music_source(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     store = get_store()
     gid = _gid(event)
     custom = store.get_custom_source_url()
@@ -436,6 +600,7 @@ async def cmd_music_source(event, match):
 
 
 async def _search_and_reply(event, keyword: str, *, shared: bool) -> None:
+    nick, av = await _touch_user(event)
     uid, appid, gid = _session_uid(event), _appid(event), _gid(event)
     btns = group_search_buttons() if shared else search_buttons()
     store = get_store()
@@ -448,7 +613,7 @@ async def _search_and_reply(event, keyword: str, *, shared: bool) -> None:
         if shared:
             store_group_search(
                 appid, gid, keyword, songs,
-                uid=uid, nickname=_nickname(event),
+                uid=uid, nickname=nick,
             )
         else:
             store_search(uid, appid, gid, keyword, songs)
@@ -457,7 +622,8 @@ async def _search_and_reply(event, keyword: str, *, shared: bool) -> None:
             appid=appid,
             uid=uid,
             gid=gid,
-            nickname=_nickname(event),
+            nickname=nick,
+            avatar=av,
             scope='group' if shared else 'personal',
         )
         md = format_search_list(
@@ -473,7 +639,7 @@ async def _search_and_reply(event, keyword: str, *, shared: bool) -> None:
 
 @handler(rf'^{_P}群点歌\s*(.*)$', name='#群点歌', desc='本群共享点歌：#群点歌 歌名', priority=26, block=True)
 async def cmd_group_song(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     gid = _gid(event)
     if not gid:
         await _reply_md(
@@ -495,7 +661,7 @@ async def cmd_group_song(event, match):
 
 @handler(rf'^{_P}(?!群)点歌\s*(.*)$', name='#点歌', desc='个人搜索歌曲：#点歌 歌名', priority=25, block=True)
 async def cmd_song(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     arg = (match.group(1) or '').strip()
     if not arg:
         await _reply_md(event, format_help_markdown(), buttons=help_buttons())
@@ -527,7 +693,7 @@ async def cmd_listen(event, match):
 
 @handler(rf'^{_P}歌词开关$', name='#歌词开关', desc='切换个人歌词显示开关', priority=24, block=True)
 async def cmd_lyric_toggle(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     store = get_store()
     appid, uid, gid = _appid(event), _session_uid(event), _gid(event)
     if store.group_lyrics_forced_off(gid):
@@ -551,7 +717,7 @@ async def cmd_lyric_toggle(event, match):
 
 @handler(rf'^{_P}歌词开$', name='#歌词开', desc='开启个人歌词显示', priority=24, block=True)
 async def cmd_lyric_on(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     store = get_store()
     if _group_lyrics_blocked(event, store):
         await _reply_md(event, _GROUP_LYRIC_OFF_MSG, buttons=help_buttons())
@@ -562,7 +728,7 @@ async def cmd_lyric_on(event, match):
 
 @handler(rf'^{_P}歌词关$', name='#歌词关', desc='关闭个人歌词显示', priority=24, block=True)
 async def cmd_lyric_off(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     get_store().set_user_show_lyrics(_appid(event), _session_uid(event), False, _nickname(event))
     await _reply_md(
         event,
@@ -572,7 +738,7 @@ async def cmd_lyric_off(event, match):
 
 
 async def _set_group_lyrics(event, value: bool) -> None:
-    _touch_user(event)
+    await _touch_user(event)
     gid = _gid(event)
     if not gid:
         await _reply_md(
@@ -613,7 +779,7 @@ async def cmd_group_lyric_off(event, match):
 
 @handler(rf'^{_P}群歌词状态$', name='#群歌词状态', desc='查看本群歌词设置', priority=24, block=True)
 async def cmd_group_lyric_status(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     gid = _gid(event)
     if not gid:
         await _reply_md(event, '本指令仅限群聊使用。', buttons=help_buttons())
@@ -661,7 +827,7 @@ def _is_bot_owner(event, appid: str = '') -> bool:
     block=True,
 )
 async def _on_group_lyric_button(event, match):
-    _touch_user(event)
+    await _touch_user(event)
     store = get_store()
     gid = _gid(event)
     if not gid:

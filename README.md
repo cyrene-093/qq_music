@@ -1,4 +1,4 @@
-# QQ 音乐点歌
+﻿# QQ 音乐点歌
 
 面向 ElainaBot v2 的 QQ 机器人点歌插件。
 
@@ -6,7 +6,7 @@
 
 | 项目 | 说明 |
 | --- | --- |
-| 版本 | 1.9.5 |
+| 版本 | 1.9.8 |
 | 许可 | [MIT](./LICENSE) |
 | 运行环境 | ElainaBot v2 |
 | 额外依赖 | 无 |
@@ -24,7 +24,7 @@
 
 ## 功能
 
-- `#点歌` / `#听N`（个人）· `#群点歌` / `#群听N`（群共享）
+- `#点歌` / `#听N`（个人）；`#群点歌` / `#群听N`（群共享）
 - 多歌源：第三方、官方搜索、落月、网易云
 - 歌词开关（个人 / 群 / 全局）
 - Web：歌源、统计、记录、用户与群设置（含日/夜背景 UI）
@@ -33,11 +33,28 @@
 
 ```text
 qq_music/
-├── main.py / service.py / sources.py / official_qq.py
-├── settings.py / web_panel.py / panel.html
-├── data/settings.json.example · data/README.md
-├── assets/bg/          # 面板日/夜背景图
-├── LICENSE · README.md · USAGE.md · .gitignore
+├── main.py                      # 插件入口与指令
+├── service.py                   # 搜索缓存、播放与文案
+├── sources.py                   # 歌源定义与搜播回退
+├── official_qq.py               # QQ 官方搜索
+├── settings.py                  # 设置 / 统计 / 记录存储
+├── web_panel.py                 # Web 面板 API
+├── panel.html                   # Web 面板页面
+├── LICENSE
+├── README.md
+├── USAGE.md
+├── PUBLISH.md
+├── .gitignore
+├── assets/
+│   └── bg/                      # 面板日/夜背景（可选）
+│       ├── README.md
+│       ├── day.jpg              # 可选，自行放入
+│       └── night.jpg            # 可选，自行放入
+└── data/
+    ├── README.md
+    └── settings.json.example    # 空白配置示例
 ```
 
-运行时会生成 `data/settings.json` 等。
+运行时会在 `data/` 生成 `settings.json`、`group_remarks.json` 等，请勿把真实配置提交到仓库。
+
+各文件职责详见 [USAGE.md](./USAGE.md) 第 9 节。

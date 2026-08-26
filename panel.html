@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -95,9 +95,79 @@ body.theme-night .anime-bg-vignette{box-shadow:inset 0 0 100px rgba(0,0,0,0.45)}
 .logo{
   width:42px;height:42px;border-radius:14px;
   background:linear-gradient(135deg,#ff6bcb,#6bc5ff);
-  display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;
+  display:flex;align-items:center;justify-content:center;
   box-shadow:var(--glow-pink);border:1px solid rgba(255,255,255,0.25);
 }
+.logo svg,.ico{width:1.1em;height:1.1em;display:inline-block;vertical-align:-0.15em;flex-shrink:0;fill:currentColor}
+.logo svg{width:22px;height:22px;fill:#fff}
+.tab .ico{width:14px;height:14px;margin-right:4px;opacity:.92}
+.quick-title .ico{width:15px;height:15px;color:var(--pl)}
+.grp-avatar.ph svg,.rank-cover.ph svg,.rec-avatar.ph svg{width:60%;height:60%;fill:currentColor;opacity:.9}
+.rec-list{display:flex;flex-direction:column;gap:8px;min-width:0;width:100%}
+.rec-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--glass-input);
+  min-width:0;width:100%;box-sizing:border-box;
+}
+.rec-avatar,.rec-avatar.ph{
+  width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(255,107,203,0.2),rgba(107,197,255,0.2));
+  color:var(--pl);border:1px solid var(--bd);margin-top:1px;
+}
+.rec-main{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.rec-top{display:flex;align-items:baseline;gap:8px;min-width:0}
+.rec-song{flex:1 1 auto;min-width:0;font-size:13px;font-weight:800;color:var(--s);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-song a{
+  color:var(--s);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--s) 55%,transparent);
+}
+.rec-song a:hover{color:var(--pl);border-bottom-color:var(--pl)}
+.rec-userline{
+  display:flex;align-items:baseline;gap:8px;min-width:0;
+  white-space:nowrap;overflow:hidden;
+}
+.rec-name{font-size:12px;font-weight:700;color:var(--text);flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.rec-oid{font-size:11px;font-weight:600;color:var(--tl);flex:0 1 42%;min-width:0;max-width:48%;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,'Cascadia Code',monospace}
+.rec-time{font-size:11px;font-weight:700;color:var(--tl);white-space:nowrap;flex:0 0 auto}
+.usr-cell{display:inline-flex;align-items:center;gap:10px;min-width:0;max-width:100%}
+.usr-avatar,.usr-avatar.ph{
+  width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(255,107,203,0.2),rgba(107,197,255,0.2));
+  color:var(--pl);border:1px solid var(--bd);
+}
+.usr-avatar.ph svg{width:60%;height:60%;fill:currentColor;opacity:.9}
+.usr-name{font-size:13px;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width: 900px){
+  .rec-item{gap:10px;padding:10px}
+  .rec-avatar,.rec-avatar.ph{width:40px;height:40px}
+  .rec-main{gap:2px}
+  .rec-top{gap:6px}
+  .rec-userline{
+    flex-direction:column;align-items:stretch;gap:1px;
+    white-space:normal;overflow:visible;
+  }
+  .rec-name{
+    flex:none;width:100%;max-width:100%;
+    white-space:normal;overflow:visible;text-overflow:unset;
+    word-break:break-word;line-height:1.35;
+  }
+  .rec-oid{
+    flex:none;width:100%;max-width:100%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-size:10px;line-height:1.3;
+  }
+  .rec-time{font-size:10px}
+  .usr-avatar,.usr-avatar.ph{width:32px;height:32px}
+}
+@media (max-width: 480px){
+  .rec-item{padding:8px 9px;gap:8px}
+  .rec-avatar,.rec-avatar.ph{width:36px;height:36px}
+  .rec-song{font-size:12px}
+  .rec-name{font-size:12px}
+}
+.daynight-toggle .dn-icon svg{width:12px;height:12px;display:block;fill:currentColor}
 .brand h1{font-size:18px;font-weight:800;color:var(--text);text-shadow:var(--text-shadow);min-width:0;line-height:1.3}
 .brand span{font-size:12px;color:var(--tl);margin-left:8px;font-weight:600}
 .switch-box{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text)}
@@ -127,7 +197,7 @@ body.theme-night .btn-danger{color:#fecdd3;background:rgba(244,63,94,0.22);borde
 .quick{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px}
 .picker-wide{width:100%;min-width:0}
 .picker-wide input{font-family:inherit}
-.pick-list.wide-drop{min-width:100%;width:max(100%,520px);max-width:min(720px,calc(100vw - 48px))}
+.pick-list.wide-drop{min-width:100%;width:100%;max-width:100%}
 .pick-item .pm.grp-row{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;min-width:0}
 .pick-item .oid{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;font-weight:700;color:var(--text)}
 .pick-item .oid.mono{font-family:ui-monospace,'Cascadia Code',monospace;font-size:12px;font-weight:600;color:var(--pl)}
@@ -249,11 +319,11 @@ body.theme-day .b-play{color:#a21caf;background:rgba(168,85,247,0.12)}
 .rank-bar{flex:0 1 140px;height:8px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden}
 .rank-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--p),var(--s));border-radius:99px;transition:width .4s;box-shadow:0 0 8px rgba(255,107,203,0.5)}
 .rank-name{font-size:13px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:var(--text-shadow)}
+.rank-name a{color:inherit;text-decoration:none;border-bottom:1px dashed rgba(107,197,255,0.45)}
+.rank-name a:hover{color:var(--pl);border-bottom-color:var(--pl)}
 .rank-count{font-size:12px;font-weight:800;color:var(--pl);min-width:40px;text-align:right}
 .rank-cover{width:48px;height:48px;border-radius:12px;object-fit:cover;flex-shrink:0;background:rgba(0,0,0,0.3);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
 .rank-cover.ph{display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(135deg,rgba(255,107,203,0.2),rgba(107,197,255,0.2))}
-.rank-link{font-size:11px;color:#9dd4ff;text-decoration:none;flex-shrink:0;white-space:nowrap;padding:4px 12px;border-radius:20px;background:rgba(107,197,255,0.15);font-weight:600;border:1px solid rgba(107,197,255,0.25);transition:all .15s}
-.rank-link:hover{background:rgba(107,197,255,0.3);text-decoration:none;box-shadow:var(--glow-blue)}
 .filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
 .filter .picker{min-width:180px}
 .filter input,.filter select{
@@ -306,24 +376,80 @@ body.theme-day .cookie-status.is-off,body.theme-day .source-status.is-off{color:
 }
 .source-custom input:focus{border-color:rgba(255,107,203,0.5)}
 .chart-sel.source-sel{max-width:min(220px,42vw)}
-.newblk{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.newblk{display:flex;flex-direction:column;gap:8px;margin-top:0}
 .newblk input{
-  flex:1;min-width:180px;padding:9px 12px;border-radius:10px;border:1px solid var(--bd);font-size:13px;outline:none;
-  background:var(--glass-input);color:var(--text);
+  width:100%;min-width:0;padding:9px 12px;border-radius:10px;border:1px solid var(--bd);font-size:13px;outline:none;
+  background:var(--glass-input);color:var(--text);box-sizing:border-box;
 }
 .newblk input:focus{border-color:rgba(255,107,203,0.5)}
-.pager{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap}
-.pager .pg{font-size:12px;font-weight:700;color:var(--tl)}
-.pager .pg-num{
-  display:inline-block;min-width:28px;height:28px;line-height:28px;text-align:center;
-  border:1px solid var(--bd);border-radius:8px;margin:0 2px;cursor:pointer;font-size:12px;font-weight:700;
-  background:var(--glass-input);color:var(--text);transition:all .15s;
+.newblk .btn{width:100%}
+.pager{
+  display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;
+  flex-wrap:wrap;width:100%;max-width:100%;box-sizing:border-box;
 }
-.pager .pg-num.cur{background:linear-gradient(135deg,var(--p),#a855f7);color:#fff;border-color:transparent;box-shadow:var(--glow-pink)}
-.pager .pg-num:hover:not(.cur){background:rgba(255,107,203,0.2);color:#fff}
+.pager .pg{font-size:12px;font-weight:700;color:var(--tl);margin-right:4px}
+.pager .pg-btn,.pager .pg-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:32px;height:32px;padding:0 8px;box-sizing:border-box;
+  border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;
+  background:var(--glass-input);color:var(--text);transition:all .15s;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.pager .pg-btn.disabled,.pager .pg-num.disabled{
+  opacity:.4;pointer-events:none;cursor:default;
+}
+.pager .pg-num.cur{
+  background:linear-gradient(135deg,var(--p),#a855f7);color:#fff;border-color:transparent;box-shadow:var(--glow-pink);
+}
+.pager .pg-btn:hover:not(.disabled),.pager .pg-num:hover:not(.cur):not(.disabled){
+  background:rgba(255,107,203,0.2);color:var(--text);
+}
 .legend{display:flex;gap:16px;justify-content:center;font-size:12px;font-weight:700;margin-top:8px;color:var(--tl)}
 .panel-user-group .tbl-wrap{box-shadow:none}
-.act-btns{display:flex;gap:6px;flex-wrap:nowrap}
+.panel-user-group,.panel{max-width:100%;min-width:0;overflow-x:hidden;box-sizing:border-box}
+#panel-groups.panel.active{
+  display:flex;flex-direction:column;gap:12px;width:100%;max-width:100%;min-width:0;
+}
+#panel-groups .card{
+  width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden;
+}
+.groups-lead{
+  font-size:12px;font-weight:600;color:var(--tl);line-height:1.5;margin:0 0 12px;
+}
+.groups-editor-empty{font-size:12px;font-weight:600;color:var(--tl)}
+.grp-editor-head{
+  display:flex;align-items:center;gap:10px;min-width:0;margin-bottom:12px;
+  padding:10px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--glass-input);
+}
+.grp-editor-head .grp-avatar,.grp-editor-head .grp-avatar.ph,.grp-editor-head .grp-avatar.img{width:42px;height:42px}
+.grp-editor-head > div{min-width:0;flex:1}
+.groups-lyric-actions{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px;margin-bottom:8px;
+}
+.groups-lyric-actions .btn{width:100%;min-width:0;padding-left:6px;padding-right:6px}
+.remark-save-btn{width:100%}
+#groupRemarkCard{margin-top:0}
+.grp-list{display:flex;flex-direction:column;gap:8px;min-width:0;width:100%}
+.grp-item{
+  display:flex;flex-direction:column;gap:8px;min-width:0;width:100%;box-sizing:border-box;
+  padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--glass-input);cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.grp-item:hover,.grp-item.is-active{border-color:rgba(107,197,255,0.5);background:rgba(107,197,255,0.1)}
+.grp-item-head{display:flex;align-items:center;gap:10px;min-width:0}
+.grp-item-meta{min-width:0;flex:1 1 auto;overflow:hidden}
+.grp-item-name{
+  font-size:13px;font-weight:800;color:var(--text);
+  white-space:normal;word-break:break-word;line-height:1.35;
+}
+.grp-item-sub{font-size:11px;font-weight:600;color:var(--tl);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.grp-item-stats{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.grp-item .act-btns{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+  width:100%;max-width:none;
+}
+.grp-item .act-btns .btn{width:100%;min-width:0;flex:none;padding-left:4px;padding-right:4px}
+.act-btns{display:flex;gap:6px;flex-wrap:wrap}
 .act-btns .btn{white-space:nowrap}
 .panel-user-group tbody tr{cursor:pointer;transition:background .15s}
 .panel-user-group tbody tr:hover td{background:rgba(107,197,255,0.1)}
@@ -341,12 +467,16 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
 .grp-avatar.img{object-fit:cover;background:#1a1030}
 .grp-avatar.ph{display:inline-flex;align-items:center;justify-content:center;font-size:17px;color:var(--pl)}
 .grp-avatar-box{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-.remark-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
-.remark-field{flex:1;min-width:140px}
+.remark-form{display:flex;flex-direction:column;gap:10px;align-items:stretch;margin-bottom:10px}
+.remark-field{width:100%;min-width:0;flex:none}
 .remark-field label{display:block;font-size:11px;font-weight:700;color:var(--tl);margin-bottom:4px}
-.remark-field input{width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;font-size:13px;font-weight:600;outline:none;background:var(--glass-input);color:var(--text)}
+.remark-field input{width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;font-size:13px;font-weight:600;outline:none;background:var(--glass-input);color:var(--text);box-sizing:border-box}
 .remark-field input:focus{border-color:rgba(255,107,203,0.5)}
-.remark-gid{font-family:ui-monospace,'Cascadia Code',monospace;font-size:12px;font-weight:600;word-break:break-all;color:var(--pl)}
+.remark-gid{
+  font-family:ui-monospace,'Cascadia Code',monospace;font-size:12px;font-weight:600;
+  word-break:break-all;color:var(--pl);line-height:1.4;
+  padding:8px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--glass-input);
+}
 .grp-cell{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%}
 .grp-cell > div,.grp-cell .oid{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .sclear.hidden{display:none}
@@ -429,7 +559,9 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   .filter .picker{min-width:0;flex:1 1 100%;width:100%}
   .filter input,.filter select{width:100%;max-width:100%;box-sizing:border-box}
   .filter select{min-width:0}
-  .card{padding:14px;max-width:100%;overflow:hidden}
+  .filter .switch-box{width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .filter .btn{width:100%}
+  .card{padding:14px;max-width:100%;overflow-x:hidden;overflow-y:visible}
   .card-title{font-size:13px;gap:8px;flex-wrap:wrap;align-items:flex-start}
   .card-title > span[style*="margin-left"]{margin-left:0!important;width:100%;justify-content:flex-start;flex-wrap:wrap}
   .source-status,.cookie-status{margin-left:0;width:100%;text-align:center;box-sizing:border-box}
@@ -440,8 +572,8 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   .remark-form{flex-direction:column;align-items:stretch}
   .remark-field{min-width:0;width:100%}
   .remark-field[style]{max-width:none!important;min-width:0!important}
-  .newblk{flex-direction:column;align-items:stretch}
-  .newblk input{min-width:0;width:100%}
+  .newblk{flex-direction:column;align-items:stretch;gap:8px}
+  .newblk input{min-width:0;width:100%;box-sizing:border-box}
   .newblk .btn{width:100%}
   .tbl-wrap{
     -webkit-overflow-scrolling:touch;
@@ -456,17 +588,13 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
     display:grid;
     grid-template-columns:28px 40px minmax(0,1fr) auto;
     grid-template-areas:
-      "no cover name name"
-      "no cover bar count"
-      ". . link link";
+      "no cover name count";
     gap:6px 8px;align-items:center;padding:10px 12px;
   }
   .rank-no{grid-area:no;align-self:center}
   .rank-cover,.rank-cover.ph{grid-area:cover;width:40px;height:40px;border-radius:10px}
   .rank-name{grid-area:name;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
-  .rank-bar{grid-area:bar;flex:none;width:100%;max-width:none;min-width:0}
   .rank-count{grid-area:count;min-width:0;text-align:right}
-  .rank-link{grid-area:link;justify-self:start;margin-top:2px}
   .rank-item:hover{transform:none}
   .legend{flex-wrap:wrap;gap:10px 14px;font-size:11px;justify-content:flex-start}
   .pick-list.wide-drop{width:auto;max-width:none;min-width:0}
@@ -485,6 +613,23 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   .picker-wide[style]{min-width:0!important;width:100%!important}
   .panel-user-group .filter{align-items:stretch}
   .panel-user-group .filter .switch-box,.panel-user-group .filter .btn{width:100%}
+  #panel-groups{gap:10px;width:100%;max-width:100%;overflow-x:hidden}
+  #panel-groups.panel.active{display:flex;flex-direction:column}
+  #panel-groups .card{
+    width:100%;max-width:100%;padding:12px;box-sizing:border-box;overflow:hidden;
+  }
+  #panel-groups .picker-wide,#panel-groups .group-search-picker{
+    width:100%;max-width:100%;min-width:0;display:block;
+  }
+  #panel-groups .pick-list.wide-drop{
+    left:0;right:0;width:auto;min-width:0;max-width:100%;box-sizing:border-box;
+  }
+  .groups-lyric-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .groups-lyric-actions .btn{font-size:12px}
+  .grp-item{padding:10px;gap:8px}
+  .grp-item .act-btns{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grp-editor-head{padding:8px 10px}
+  .remark-save-btn{width:100%}
 }
 @media (max-width: 480px){
   .shell{padding:10px 8px max(28px,env(safe-area-inset-bottom,0px))}
@@ -505,7 +650,13 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   }
   .rank-cover,.rank-cover.ph{width:36px;height:36px}
   .act-btns{max-width:100%}
+  .grp-item{padding:10px}
+  .grp-item-name{white-space:normal;word-break:break-word}
+  .pager{gap:4px;justify-content:center;padding:0 2px}
+  .pager .pg{width:100%;text-align:center;margin:0 0 4px;flex:1 0 100%}
+  .pager .pg-btn,.pager .pg-num{min-width:36px;height:36px;font-size:13px}
 }
+
 @media (hover:none) and (pointer:coarse){
   .btn,.tab,.daynight-toggle,.pick-item,.pg-num,.source-item{
     -webkit-tap-highlight-color:rgba(255,107,203,0.18);
@@ -515,6 +666,20 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   }
 }
 </style>
+<script>
+window.ICONS={
+  music:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>',
+  chart:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18v-2H5V3H3zm4 14h2V9H7v8zm4 0h2V5h-2v12zm4 0h2v-6h-2v6z"/></svg>',
+  list:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>',
+  user:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>',
+  users:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM8 11a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 8 11zm8 2c-3.33 0-6 1.79-6 4v1h12v-1c0-2.21-2.67-4-6-4zM8 13c-.7 0-1.37.1-2 .27C3.67 14.06 2 15.46 2 17.5V19h6v-1c0-1.1.4-2.1 1.07-2.93A9.7 9.7 0 0 0 8 13z"/></svg>',
+  chat:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2z"/></svg>',
+  info:'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-6h2zm0-8h-2V7h2z"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0-5h2v3h-2V2zm0 17h2v3h-2v-3zM2 11h3v2H2v-2zm17 0h3v2h-3v-2zM5.05 4.64l1.41-1.41 2.12 2.12-1.41 1.41zm10.37 10.37 2.12 2.12-1.41 1.41-2.12-2.12zM4.64 18.95l2.12-2.12 1.41 1.41-2.12 2.12zm10.37-10.37 2.12-2.12 1.41 1.41-2.12 2.12z"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.1 2a9.9 9.9 0 0 0-1.1.06A10 10 0 1 0 21.94 13a9.9 9.9 0 0 0 .06-1.1A8 8 0 0 1 12.1 2z"/></svg>'
+};
+function icon(name){return ICONS[name]||'';}
+</script>
 </head>
 <body class="theme-day">
 <div class="anime-bg anime-bg-day" id="animeBgDay" aria-hidden="true"></div>
@@ -524,13 +689,13 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
 <div class="bg-credit" id="bgCredit"></div>
 <div class="shell">
 <div class="topbar">
-  <div class="brand"><div class="logo">🎵</div><h1>QQ 音乐点歌 <span>管理面板</span></h1></div>
+  <div class="brand"><div class="logo" id="brandLogo"></div><h1>QQ 音乐点歌 <span>管理面板</span></h1></div>
   <div class="top-actions">
     <button type="button" class="daynight-toggle" id="dayNightToggle" aria-label="切换日/夜模式" onclick="toggleDayNight()">
       <span class="dn-track">
         <span class="dn-thumb"></span>
-        <span class="dn-icon dn-sun">☀</span>
-        <span class="dn-icon dn-moon">🌙</span>
+        <span class="dn-icon dn-sun" id="dnSun"></span>
+        <span class="dn-icon dn-moon" id="dnMoon"></span>
       </span>
       <span class="dn-label" id="dnLabel">日间</span>
     </button>
@@ -557,11 +722,11 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   </div>
 </div>
 <div class="tabs">
-  <div class="tab active" data-tab="overview" onclick="switchTab('overview')">📊 概览</div>
-  <div class="tab" data-tab="records" onclick="switchTab('records')">📋 点歌记录</div>
-  <div class="tab" data-tab="users" onclick="switchTab('users')">👤 用户设置</div>
-  <div class="tab" data-tab="groups" onclick="switchTab('groups')">💬 群歌词控制</div>
-  <div class="tab" data-tab="about" onclick="switchTab('about')">ℹ️ 关于</div>
+  <div class="tab active" data-tab="overview" onclick="switchTab('overview')"><span data-ico="chart"></span>概览</div>
+  <div class="tab" data-tab="records" onclick="switchTab('records')"><span data-ico="list"></span>点歌记录</div>
+  <div class="tab" data-tab="users" onclick="switchTab('users')"><span data-ico="user"></span>用户设置</div>
+  <div class="tab" data-tab="groups" onclick="switchTab('groups')"><span data-ico="chat"></span>群歌词控制</div>
+  <div class="tab" data-tab="about" onclick="switchTab('about')"><span data-ico="info"></span>关于</div>
 </div>
 <div class="panel active" id="panel-overview">
   <div class="card source-card">
@@ -577,7 +742,7 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   </div>
   <div class="quick">
   <div class="quick-card">
-    <div class="quick-title">👥 快捷搜索用户</div>
+    <div class="quick-title"><span data-ico="users"></span> 快捷搜索用户</div>
     <div class="picker picker-wide">
       <input type="text" id="userSearch" placeholder="输入昵称或 openid 筛选…" autocomplete="off">
       <button type="button" class="sclear hidden" id="userSearchClear" title="清空">×</button>
@@ -597,17 +762,16 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
 </div>
 <div class="panel" id="panel-records">
   <div class="filter">
-    <div class="picker"><input type="text" id="recKw" placeholder="关键词筛选…" autocomplete="off"><button type="button" class="sclear hidden" id="recKwClear" title="清空">×</button></div>
-    <select id="recType" onchange="renderRecords()"><option value="">全部类型</option><option value="search">搜索</option><option value="play">播放</option></select>
-    <select id="recScope" onchange="renderRecords()"><option value="">范围全部</option><option value="personal">个人</option><option value="group">群</option></select>
-    <div class="picker"><input type="text" id="recGroupIn" placeholder="按群 openid…" autocomplete="off"><button type="button" class="sclear hidden" id="recGroupInClear" title="清空">×</button></div>
-    <div class="picker"><input type="text" id="recUserIn" placeholder="按用户 openid…" autocomplete="off"><button type="button" class="sclear hidden" id="recUserInClear" title="清空">×</button></div>
-    <button class="btn btn-ghost btn-sm" onclick="clearFilters()">清除筛选</button>
+    <div class="picker"><input type="text" id="recKw" placeholder="搜昵称 / 歌名 / 歌手…" autocomplete="off"><button type="button" class="sclear hidden" id="recKwClear" title="清空">×</button></div>
+    <select id="recType" onchange="renderRecords()"><option value="play" selected>播放</option><option value="search">搜索</option><option value="">全部</option></select>
+    <select id="recScope" onchange="renderRecords()"><option value="">个人+群</option><option value="personal">个人</option><option value="group">群</option></select>
+    <label class="switch-box" title="默认只记听歌；开启后额外写入搜索关键字"><input type="checkbox" id="recordSearches" onchange="toggleRecordSearches(this.checked)"> 记录搜索</label>
+    <button class="btn btn-ghost btn-sm" onclick="clearFilters()">清除</button>
   </div>
   <div class="card">
-    <div class="card-title"><span class="dot"></span>点歌记录列表<span style="margin-left:auto;font-size:11px;color:var(--tl);font-weight:500">范围标注：个人 `#点歌` / 群 `#群点歌`</span></div>
-    <div class="tbl-wrap"><table><thead><tr><th>时间</th><th>类型</th><th>范围</th><th>群 openid</th><th>用户 openid</th><th>昵称</th><th>关键词</th><th>歌名</th><th>歌手</th></tr></thead><tbody id="recordsBody"></tbody></table></div>
-    <div class="pager" id="recPager"></div>
+    <div class="card-title"><span class="dot"></span>点歌记录<span style="margin-left:auto;font-size:11px;color:var(--tl);font-weight:500">记听歌 · 完整歌名与原链接</span></div>
+    <div id="recordsBody" class="rec-list"></div>
+    <div id="recPager"></div>
   </div>
 </div>
 <div class="panel panel-user-group" id="panel-users">
@@ -628,48 +792,59 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
   </div>
   <div class="card">
     <div class="card-title"><span class="dot"></span>用户列表<span style="margin-left:auto;font-size:11px;color:var(--tl);font-weight:500">管理个人歌词偏好 · 按最近活跃排序</span></div>
-    <div class="tbl-wrap"><table><thead><tr><th>昵称</th><th>用户 openid</th><th>生效</th><th>个人设置</th><th>搜索</th><th>播放</th><th>操作</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+    <div class="tbl-wrap"><table><thead><tr><th>用户</th><th>生效</th><th>个人设置</th><th>搜索</th><th>播放</th><th>操作</th></tr></thead><tbody id="usersBody"></tbody></table></div>
   </div>
 </div>
 <div class="panel panel-user-group" id="panel-groups">
-  <div class="card">
-    <div class="card-title"><span class="dot"></span>群歌词控制<span style="margin-left:auto;font-size:11px;color:var(--tl);font-weight:500">仅群主/管理员可控制 · 群关闭后成员无法自行开启</span></div>
-    <div class="filter filter-wide" style="margin-bottom:12px">
-      <div class="picker picker-wide group-search-picker">
-        <input type="text" id="groupFilterIn" placeholder="点击选择群聊，可输入筛选…" autocomplete="off">
-        <button type="button" class="sclear hidden" id="groupFilterClear" title="清空">×</button>
-        <div class="pick-list wide-drop" id="groupFilterList"></div>
-      </div>
+  <div class="card groups-search-card">
+    <div class="card-title"><span class="dot"></span>群歌词控制</div>
+    <p class="groups-lead">仅群主/管理员可控制。群关闭后，成员无法自行开启歌词。</p>
+    <div class="picker picker-wide group-search-picker">
+      <input type="text" id="groupFilterIn" placeholder="搜索群名称 / openid…" autocomplete="off">
+      <button type="button" class="sclear hidden" id="groupFilterClear" title="清空">×</button>
+      <div class="pick-list wide-drop" id="groupFilterList"></div>
     </div>
-    <div class="card" id="groupRemarkCard">
-      <div class="card-title"><span class="dot"></span>群资料备注（名称 / 群号 / 头像）</div>
-      <p class="group-follow-hint">与 Web 管理端群备注共用 <code>data/group_remarks.json</code>。填写纯数字 <b>QQ 群号</b> 并保存后显示真实群头像（非 openid）。</p>
-      <div class="remark-form">
-        <div class="remark-field" style="min-width:200px">
-          <label>群 openid</label>
-          <div class="remark-gid" id="remarkGid">未选择群（从上方选择或点击列表）</div>
-        </div>
-        <div class="remark-field">
-          <label>群名称</label>
-          <input type="text" id="remarkName" placeholder="显示名称" autocomplete="off">
-        </div>
-        <div class="remark-field" style="max-width:160px">
-          <label>QQ 群号</label>
-          <input type="text" id="remarkQq" placeholder="纯数字" autocomplete="off" inputmode="numeric">
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="saveGroupRemark()">保存备注</button>
-      </div>
-      <div class="grp-cell" id="remarkAvatarPreview" style="font-size:12px;color:var(--tl)"></div>
+  </div>
+
+  <div class="card groups-editor-card" id="groupRemarkCard">
+    <div class="card-title"><span class="dot"></span>当前群设置</div>
+    <div class="grp-editor-head" id="remarkAvatarPreview">
+      <span class="groups-editor-empty">先从下方列表点选一个群</span>
     </div>
-    <div class="tbl-wrap"><table><thead><tr><th>头像</th><th>群名称</th><th>群人数</th><th>生效</th><th>群设置</th><th>搜索</th><th>播放</th><th>操作</th></tr></thead><tbody id="groupsBody"></tbody></table></div>
+    <div class="remark-form">
+      <div class="remark-field">
+        <label>群 openid</label>
+        <div class="remark-gid" id="remarkGid">未选择</div>
+      </div>
+      <div class="remark-field">
+        <label>显示名称</label>
+        <input type="text" id="remarkName" placeholder="群名称备注" autocomplete="off">
+      </div>
+      <div class="remark-field">
+        <label>QQ 群号（用于头像）</label>
+        <input type="text" id="remarkQq" placeholder="纯数字群号" autocomplete="off" inputmode="numeric">
+      </div>
+      <button class="btn btn-primary btn-sm remark-save-btn" onclick="saveGroupRemark()">保存备注</button>
+    </div>
+    <div class="groups-lyric-actions" id="groupLyricActions">
+      <button class="btn btn-secondary btn-sm" type="button" onclick="setCurrentGroupLyrics(true)">开启歌词</button>
+      <button class="btn btn-danger btn-sm" type="button" onclick="setCurrentGroupLyrics(false)">关闭歌词</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="setCurrentGroupLyrics(null)">跟随全局</button>
+    </div>
+    <p class="group-follow-hint">备注与 Web 管理端共用 <code>group_remarks.json</code>。群号请填数字 QQ 群号。</p>
+  </div>
+
+  <div class="card groups-list-card">
+    <div class="card-title"><span class="dot"></span>群列表<span id="groupsCountHint" style="margin-left:auto;font-size:11px;color:var(--tl);font-weight:500"></span></div>
+    <div id="groupsBody" class="grp-list"></div>
+  </div>
+
+  <div class="card groups-add-card">
+    <div class="card-title"><span class="dot"></span>添加群</div>
     <div class="newblk">
-      <input type="text" id="newGroupId" placeholder="群 openid（未记录过的群）" onkeydown="if(event.key==='Enter')setNewGroup('add')">
-      <button class="btn btn-primary btn-sm" onclick="setNewGroup('add')">添加群</button>
-      <button class="btn btn-secondary btn-sm" onclick="setNewGroup(true)">开启歌词</button>
-      <button class="btn btn-danger btn-sm" onclick="setNewGroup(false)">关闭歌词</button>
-      <button class="btn btn-ghost btn-sm" onclick="setNewGroup(null)">跟随全局</button>
+      <input type="text" id="newGroupId" placeholder="输入群 openid" onkeydown="if(event.key==='Enter')setNewGroup('add')">
+      <button class="btn btn-primary btn-sm" onclick="setNewGroup('add')">添加并选中</button>
     </div>
-    <p class="group-follow-hint">群设置为<b>关</b>时，本群成员无法通过个人设置开启歌词。</p>
   </div>
 </div>
 <div class="panel" id="panel-about">
@@ -678,7 +853,7 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
       <div class="card-title"><span class="dot"></span>插件简介</div>
       <p>面向 ElainaBot v2 的 QQ 机器人点歌插件。支持个人 / 群点歌、多歌源切换、LRC 歌词、语音或文件发送，以及本 Web 管理面板。</p>
       <div class="about-meta">
-        <span class="about-chip">版本 <b id="aboutVersion">1.9.5</b></span>
+        <span class="about-chip">版本 <b id="aboutVersion">1.9.8</b></span>
         <span class="about-chip">作者 飞行漂绒</span>
         <span class="about-chip">许可 MIT</span>
         <span class="about-chip">目录名 <code>qq_music</code></span>
@@ -720,7 +895,7 @@ body.theme-night .group-follow-hint code{background:rgba(0,0,0,0.3)}
       <h3>本面板能做什么</h3>
       <ul>
         <li><b>概览</b>：统计、趋势、热门排行、全局歌源与自定义接口。</li>
-        <li><b>点歌记录</b>：按类型 / 范围 / 群 / 用户筛选。</li>
+        <li><b>点歌记录</b>：头像、昵称、歌名与时间。</li>
         <li><b>用户设置</b>：个人歌词偏好。</li>
         <li><b>群歌词控制</b>：群开关、群备注与头像、未记录群的添加。</li>
         <li>顶栏可选中群，单独覆盖本群歌源与歌词。</li>
@@ -846,10 +1021,10 @@ function groupAvatarUrls(g){
 }
 function groupAvatarHtml(g){
   const urls=groupAvatarUrls(g);
-  if(!urls.length)return '<span class="grp-avatar ph">👥</span>';
+  if(!urls.length)return '<span class="grp-avatar ph">'+icon('users')+'</span>';
   const first=esc(urls[0]);
   const alt=urls.length>1?esc(urls[1]):'';
-  return '<span class="grp-avatar-box"><img class="grp-avatar img" src="'+first+'" alt="" referrerpolicy="no-referrer" data-alt="'+alt+'" onerror="if(this.dataset.alt&&!this.dataset.swapped){this.dataset.swapped=1;this.src=this.dataset.alt}else{var s=document.createElement(\'span\');s.className=\'grp-avatar ph\';s.textContent=\'👥\';this.replaceWith(s)}"></span>';
+  return '<span class="grp-avatar-box"><img class="grp-avatar img" src="'+first+'" alt="" referrerpolicy="no-referrer" data-alt="'+alt+'" onerror="if(this.dataset.alt&&!this.dataset.swapped){this.dataset.swapped=1;this.src=this.dataset.alt}else{var s=document.createElement(\'span\');s.className=\'grp-avatar ph\';s.innerHTML=window.ICONS.users;this.replaceWith(s)}"></span>';
 }
 function groupPickItemHtml(g){
   const gid=String(g.group_id||'');
@@ -863,16 +1038,24 @@ function fillGroupRemarkForm(g){
   const prev=document.getElementById('remarkAvatarPreview');
   if(!gidEl||!nameEl||!qqEl||!prev)return;
   if(!g||!g.group_id){
-    gidEl.textContent='未选择群（从上方选择或点击列表）';
+    gidEl.textContent='未选择';
     nameEl.value='';
     qqEl.value='';
-    prev.innerHTML='';
+    prev.innerHTML='<span class="groups-editor-empty">先从下方列表点选一个群</span>';
     return;
   }
   gidEl.textContent=g.group_id;
   nameEl.value=String(g.name||'').trim();
   qqEl.value=String(g.group_qq||'').trim();
-  prev.innerHTML=groupAvatarHtml(g)+'<span style="margin-left:8px">头像预览（保存群号后刷新）</span>';
+  const gtitle=esc(groupDisplayName(g));
+  const eff=g.effective_show_lyrics?'开':(g.show_lyrics===false?'关':'跟随');
+  prev.innerHTML=groupAvatarHtml(g)+
+    '<div><div style="font-size:14px;font-weight:800;color:var(--text);word-break:break-word">'+gtitle+'</div>'+
+    '<div style="font-size:11px;color:var(--tl);margin-top:3px">人数 '+fmtMemberCount(g.member_count)+' · 生效 '+eff+'</div></div>';
+}
+async function setCurrentGroupLyrics(v){
+  if(!currentGroup||!currentGroup.group_id){toast('请先选择群');return;}
+  await setGroupLyrics(currentGroup.group_id,v);
 }
 async function saveGroupRemark(){
   const gid=currentGroup&&currentGroup.group_id;
@@ -988,6 +1171,8 @@ async function getSettings(){
     const j=await r.json();
     if(!j.ok)return;
     document.getElementById('globalLyrics').checked=!!j.show_lyrics;
+    const rs=document.getElementById('recordSearches');
+    if(rs)rs.checked=!!j.record_searches;
     MUSIC_SOURCES=j.sources||[];
     CURRENT_SOURCE_ID=j.music_source||'';
     const custom=document.getElementById('customSourceUrl');
@@ -1067,7 +1252,7 @@ async function setMusicSource(id){
     fillSourceSelects(CURRENT_SOURCE_ID);
     renderSourceList(CURRENT_SOURCE_ID);
     applySourceStatus(j);
-    toast('全局歌源：'+(j.music_source_name||id));
+    toast('全局歌源：'+(j.music_source_name||id)+'（请重新点歌）');
   }catch(e){toast('切换失败');}
 }
 async function saveCustomSource(){
@@ -1136,14 +1321,43 @@ function renderStats(){
   ];
   document.getElementById('stats').innerHTML=items.map(x=>`<div class="stat"><div class="num">${x.n}</div><div class="lab">${x.l}</div></div>`).join('');
 }
-function renderTop(){const el=document.getElementById('rank');if(!el)return;const all=DASH.top_songs||[];if(!all.length){el.innerHTML='<div class="empty">暂无播放数据</div>';return;}const rows=all.slice(0,10);const max=Math.max(...rows.map(r=>r.count||0),1);el.innerHTML='<div class="rank">'+rows.map((r,i)=>{const no=i+1;const pct=Math.round((r.count||0)/max*100);const cover=r.cover?'<img class="rank-cover" src="'+esc(r.cover)+'" alt="">':'<span class="rank-cover ph">🎵</span>';const link=r.url?'<a class="rank-link" href="'+esc(r.url)+'" target="_blank" rel="noopener">原链接</a>':'';return '<div class="rank-item"><span class="rank-no '+(no<=3?'top':'')+'">'+no+'</span>'+cover+'<span class="rank-name" title="'+esc(r.song||'')+'">'+esc(r.song||'')+' · '+esc(r.singer||'')+'</span><div class="rank-bar"><i style="width:'+pct+'%"></i></div><span class="rank-count">'+(r.count||0)+'次</span>'+link+'</div>';}).join('')+'</div>';}
-function renderRecent(){const el=document.getElementById('recent');const all=DASH.recent_records||[];if(!all.length){el.innerHTML='<div class="empty">暂无点歌记录</div>';return;}const tp=Math.max(1,Math.ceil(all.length/recentPS));if(recentPage>tp)recentPage=tp;const st=(recentPage-1)*recentPS;const rows=all.slice(st,st+recentPS);el.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>时间</th><th>类型</th><th>内容</th><th>用户</th></tr></thead><tbody>${rows.map(recentRow).join('')}</tbody></table></div>`;el.insertAdjacentHTML('beforeend',mkPager(el,'recentPage','recentPS',tp,'goRecentPage'));}
+function renderTop(){const el=document.getElementById('rank');if(!el)return;const all=DASH.top_songs||[];if(!all.length){el.innerHTML='<div class="empty">暂无播放数据</div>';return;}const rows=all.slice(0,10);el.innerHTML='<div class="rank">'+rows.map((r,i)=>{const no=i+1;const cover=r.cover?'<img class="rank-cover" src="'+esc(r.cover)+'" alt="">':'<span class="rank-cover ph">'+icon('music')+'</span>';const label=esc(r.song||'')+' · '+esc(r.singer||'');const name=r.url?('<a class="rank-song" href="'+esc(r.url)+'" target="_blank" rel="noopener" title="打开原链接">'+label+'</a>'):label;return '<div class="rank-item"><span class="rank-no '+(no<=3?'top':'')+'">'+no+'</span>'+cover+'<span class="rank-name" title="'+esc(r.song||'')+'">'+name+'</span><span class="rank-count">'+(r.count||0)+'次</span></div>';}).join('')+'</div>';}
+function buildPagerHtml(cur,tp,fnName){
+  cur=Math.max(1,Math.min(Math.max(1,tp),Number(cur)||1));
+  if(tp<=1)return '';
+  const nav=(p,label,disabled)=>{
+    return '<span class="pg-btn'+(disabled?' disabled':'')+'"'+(disabled?'':' onclick="'+fnName+'('+p+')"')+'>'+label+'</span>';
+  };
+  let h='<div class="pager"><span class="pg">第 '+cur+' / '+tp+' 页</span>';
+  h+=nav(1,'«',cur<=1);
+  h+=nav(cur-1,'‹',cur<=1);
+  const lo=Math.max(1,cur-2),hi=Math.min(tp,cur+2);
+  for(let i=lo;i<=hi;i++){
+    h+='<span class="pg-num'+(i===cur?' cur':'')+'" onclick="'+fnName+'('+i+')">'+i+'</span>';
+  }
+  h+=nav(cur+1,'›',cur>=tp);
+  h+=nav(tp,'»',cur>=tp);
+  return h+'</div>';
+}
+function renderRecent(){
+  const el=document.getElementById('recent');
+  if(!el)return;
+  const all=DASH.recent_records||[];
+  if(!all.length){el.innerHTML='<div class="empty">暂无点歌记录</div>';return;}
+  const tp=Math.max(1,Math.ceil(all.length/recentPS));
+  if(recentPage>tp)recentPage=tp;
+  if(recentPage<1)recentPage=1;
+  const st=(recentPage-1)*recentPS;
+  const rows=all.slice(st,st+recentPS);
+  el.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>时间</th><th>类型</th><th>内容</th><th>用户</th></tr></thead><tbody>'+
+    rows.map(recentRow).join('')+'</tbody></table></div>'+buildPagerHtml(recentPage,tp,'goRecentPage');
+}
 function recentRow(r){const type=r.type==='play'?'<span class="badge b-play">播放</span>':'<span class="badge b-search">搜索</span>';const scope=scopeBadge(r);const content=r.type==='play'?`${esc(r.song||'')} · ${esc(r.singer||'')}`:`${esc(r.keyword||'')}`;const who=r.nickname||(r.uid?String(r.uid).slice(-6):'-');return `<tr><td>${ts2str(r.ts)}</td><td>${type} ${scope}</td><td>${content}</td><td>${esc(who)}</td></tr>`;}
-function goTopPage(p){topPage=p;renderTop();renderTopPager();}
-function goRecentPage(p){recentPage=p;renderRecent();}
+function goTopPage(p){topPage=p;renderTop();}
+function goRecentPage(p){recentPage=Math.max(1,Number(p)||1);renderRecent();}
 function renderTopPager(){return '';}
-function renderRecentPager(){const el=document.getElementById('recent');const all=DASH.recent_records||[];if(all.length>recentPS){const tp=Math.ceil(all.length/recentPS);el.innerHTML+=mkPager('recent','recentPage','recentPS',tp,'goRecentPage');}}
-function mkPager(anchor,pageVar,psVar,tp,fn){if(tp<=1)return '';const cur=window[pageVar]||1;let h=`<div class="pager" style="margin-top:10px"><span class="pg">共${tp}页</span>`;h+=`<span class="pg-num ${cur===1?'cur':''}" onclick="${fn}(1)">«</span>`;const lo=Math.max(1,cur-2),hi=Math.min(tp,cur+2);for(let i=lo;i<=hi;i++)h+=`<span class="pg-num ${i===cur?'cur':''}" onclick="${fn}(${i})">${i}</span>`;h+=`<span class="pg-num ${cur===tp?'cur':''}" onclick="${fn}(${tp})">»</span>`;return h+'</div>';}
+function renderRecentPager(){}
+function mkPager(){return '';}
 function renderChart(){
   var el=document.getElementById('chart');if(!el)return;
   var s=DASH.series;
@@ -1205,12 +1419,170 @@ function hideTip(){var tip=document.getElementById('chartTip');if(tip)tip.style.
 function chartLeave(){var v=document.getElementById('chartVLine'),h=document.getElementById('chartHLine');if(v)v.style.display='none';if(h)h.style.display='none';hideTip();}
 function chartMove(ev){var svg=document.querySelector('#chart svg');if(!svg)return;var t=ev.touches&&ev.touches[0];var cx=t?t.clientX:ev.clientX,cy=t?t.clientY:ev.clientY;if(t)ev.preventDefault();var sr=svg.getBoundingClientRect();var d=window.__chartData||{};var W=d.W||760,H=d.H||236,P=d.P||36,padR=d.padR||12,padB=d.padB||22;var plotW=W-P*2-padR,plotH=H-P-padB;var mx=(cx-sr.left)/sr.width*W,my=(cy-sr.top)/sr.height*H;mx=Math.max(P,Math.min(P+plotW,mx));my=Math.max(P,Math.min(P+plotH,my));var v=document.getElementById('chartVLine'),h=document.getElementById('chartHLine');if(v){v.setAttribute('x1',mx);v.setAttribute('x2',mx);v.setAttribute('y1',P);v.setAttribute('y2',P+plotH);v.style.display='block';}if(h){h.setAttribute('x1',P);h.setAttribute('x2',P+plotW);h.setAttribute('y1',my);h.setAttribute('y2',my);h.style.display='block';}if(d&&d.labels&&d.labels.length){var n=d.labels.length;var frac=n<=1?0:((mx-P)/plotW);var idx=Math.max(0,Math.min(n-1,Math.round(frac*(n-1))));if(window.__chartTipIdx!==idx){window.__chartTipIdx=idx;showTip(idx);}}}
 function scopeBadge(r){const g=r&&r.scope==='group';return '<span class="badge '+(g?'b-scope-group':'b-scope-personal')+'">'+(g?'群':'个人')+'</span>';}
-function filtRecords(){const kw=(document.getElementById('recKw').value||'').trim().toLowerCase();const type=document.getElementById('recType').value;const scope=(document.getElementById('recScope')||{}).value||'';const g=(document.getElementById('recGroupIn').value||'').trim().toLowerCase();const u=(document.getElementById('recUserIn').value||'').trim().toLowerCase();let rows=DASH.records||[];if(type)rows=rows.filter(r=>r.type===type);if(scope)rows=rows.filter(r=>(r.scope||'personal')===scope);if(kw)rows=rows.filter(r=>(r.keyword||'').toLowerCase().includes(kw)||(r.song||'').toLowerCase().includes(kw)||(r.singer||'').toLowerCase().includes(kw)||(r.nickname||'').toLowerCase().includes(kw)||(r.scope==='group'?'群':'个人').includes(kw));if(g)rows=rows.filter(r=>String(r.gid||'').toLowerCase().includes(g));if(u)rows=rows.filter(r=>String(r.uid||'').toLowerCase().includes(u));return rows;}
-function renderRecords(){const all=filtRecords();const tp=Math.max(1,Math.ceil(all.length/recPS));if(recPage>tp)recPage=tp;const st=(recPage-1)*recPS;const rows=all.slice(st,st+recPS);const body=document.getElementById('recordsBody');if(!rows.length){body.innerHTML='<tr><td colspan="9" class="empty">暂无匹配记录</td></tr>';document.getElementById('recPager').innerHTML='';return;}body.innerHTML=rows.map(r=>{const type=r.type==='play'?'<span class="badge b-play">播放</span>':'<span class="badge b-search">搜索</span>';return `<tr><td>${ts2str(r.ts)}</td><td>${type}</td><td>${scopeBadge(r)}</td><td><span class="mono">${esc(r.gid||'-')}</span></td><td><span class="mono">${esc(r.uid||'-')}</span></td><td>${esc(r.nickname||'-')}</td><td>${esc(r.keyword||'-')}</td><td>${esc(r.song||'-')}</td><td>${esc(r.singer||'-')}</td></tr>`;}).join('');renderPager(tp);}
-function renderPager(tp){const el=document.getElementById('recPager');let h=`<span class="pg">共${tp}页</span>`;h+=`<span class="pg-num ${recPage===1?'cur':''}" onclick="goRecPage(1)">«</span>`;for(let i=Math.max(1,recPage-2);i<=Math.min(tp,recPage+2);i++)h+=`<span class="pg-num ${i===recPage?'cur':''}" onclick="goRecPage(${i})">${i}</span>`;h+=`<span class="pg-num ${recPage===tp?'cur':''}" onclick="goRecPage(${tp})">»</span>`;el.innerHTML=h;}
-function goRecPage(p){recPage=p;renderRecords();}
-function renderUsers(){const body=document.getElementById('usersBody');const users=DASH.users||[];if(!users.length){body.innerHTML='<tr><td colspan="7" class="empty">暂无用户</td></tr>';return;}body.innerHTML=users.map(u=>{const key=jsq(u.user_key||'');const uid=jsq(u.user_id||'');return `<tr class="row-select" onclick="selectUser('${uid}')" title="点击选中该用户"><td>${esc(u.nickname||'（未命名）')}</td><td><span class="mono">${esc(u.user_id||'-')}</span></td><td>${lyricsBadge(u.effective_show_lyrics)}</td><td>${lyricsBadge(u.show_lyrics,'跟随全局')}</td><td>${u.searches||0}</td><td>${u.plays||0}</td><td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();editUserFromTable('${key}')">编辑</button> <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();editUserLyrics('${key}')">切换</button></td></tr>`;}).join('');}
-function renderGroups(){const body=document.getElementById('groupsBody');let groups=DASH.groups||[];if(groupFilterKw)groups=groups.filter(g=>groupMatchQuery(g,groupFilterKw));if(!groups.length){body.innerHTML='<tr><td colspan="8" class="empty">'+(groupFilterKw?'无匹配群':'暂无群')+'</td></tr>';return;}body.innerHTML=groups.map(g=>{const gid=jsq(g.group_id||'');const gname=esc(groupDisplayName(g));return `<tr onclick="selectTopGroup('${gid}')" style="cursor:pointer" title="点击选中"><td>${groupAvatarHtml(g)}</td><td><span class="nowrap">${gname}</span>${g.name?'<br><span class="mono" style="font-size:11px;color:var(--tl)">'+esc(g.group_id||'')+'</span>':''}</td><td>${fmtMemberCount(g.member_count)}</td><td>${lyricsBadge(g.effective_show_lyrics)}</td><td>${lyricsBadge(g.show_lyrics,'跟随全局')}</td><td>${g.searches||0}</td><td>${g.plays||0}</td><td class="act-btns"><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();setGroupLyrics('${gid}',true)">开</button><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();setGroupLyrics('${gid}',false)">关</button><button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();setGroupLyrics('${gid}',null)">跟随</button></td></tr>`;}).join('');}
+function filtRecords(){
+  const kw=(document.getElementById('recKw').value||'').trim().toLowerCase();
+  const type=document.getElementById('recType').value;
+  const scope=(document.getElementById('recScope')||{}).value||'';
+  let rows=DASH.records||[];
+  if(type)rows=rows.filter(r=>r.type===type);
+  if(scope)rows=rows.filter(r=>(r.scope||'personal')===scope);
+  if(kw)rows=rows.filter(r=>
+    (r.keyword||'').toLowerCase().includes(kw)||
+    (r.song||'').toLowerCase().includes(kw)||
+    (r.singer||'').toLowerCase().includes(kw)||
+    (r.nickname||'').toLowerCase().includes(kw)||
+    (r.scope==='group'?'群':'个人').includes(kw)
+  );
+  return rows;
+}
+function recordLetterAvatar(r){
+  const nick=String((r&&r.nickname)||'').trim();
+  const uid=String((r&&r.uid)||'').trim();
+  let ch=(nick||uid||'?').charAt(0);
+  if(/[a-z]/.test(ch))ch=ch.toUpperCase();
+  let h=0;
+  const seed=uid||nick||'?';
+  for(let i=0;i<seed.length;i++)h=(h*31+seed.charCodeAt(i))>>>0;
+  const hues=[320,200,265,145,25,190];
+  const hue=hues[h%hues.length];
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+    +'<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
+    +'<stop offset="0%" stop-color="hsl('+hue+',78%,62%)"/>'
+    +'<stop offset="100%" stop-color="hsl('+((hue+40)%360)+',72%,48%)"/>'
+    +'</linearGradient></defs>'
+    +'<circle cx="32" cy="32" r="32" fill="url(#g)"/>'
+    +'<text x="32" y="34" text-anchor="middle" dominant-baseline="middle" '
+    +'font-family="Noto Sans SC,Segoe UI,sans-serif" font-size="28" font-weight="700" fill="#fff">'
+    +esc(ch)+'</text></svg>';
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+function recordUserAvatar(r){
+  let av=String((r&&r.avatar)||'').trim();
+  if(!av){
+    const uid=String((r&&r.uid)||'');
+    const appid=String((r&&r.appid)||'');
+    const u=(DASH.users||[]).find(x=>x.user_id===uid||x.user_key===(appid+':'+uid)||(uid&&String(x.user_key||'').endsWith(':'+uid)));
+    if(u)av=String(u.avatar||'').trim();
+    if(!av&&appid&&uid)av='https://q.qlogo.cn/qqapp/'+encodeURIComponent(appid)+'/'+encodeURIComponent(uid)+'/100';
+  }
+  if(av&&/^https?:\/\//i.test(av)){
+    const fb=recordLetterAvatar(r);
+    return '<img class="rec-avatar" src="'+esc(av)+'" alt="" referrerpolicy="no-referrer" data-fb="'+esc(fb)+'" onerror="this.onerror=null;this.src=this.dataset.fb||\'\'">';
+  }
+  return '<img class="rec-avatar" src="'+recordLetterAvatar(r)+'" alt="">';
+}
+function recordSongUrl(r){
+  const direct=String((r&&r.url)||'').trim();
+  if(/^https?:\/\//i.test(direct))return direct;
+  const song=String((r&&r.song)||'').trim();
+  if(!song)return '';
+  const hit=(DASH.top_songs||[]).find(x=>(x.song||'')===song&&/^https?:\/\//i.test(String(x.url||'')));
+  return hit?String(hit.url):'';
+}
+function renderRecords(){
+  const all=filtRecords();
+  const tp=Math.max(1,Math.ceil(all.length/recPS));
+  if(recPage>tp)recPage=tp;
+  const st=(recPage-1)*recPS;
+  const rows=all.slice(st,st+recPS);
+  const body=document.getElementById('recordsBody');
+  if(!rows.length){
+    body.innerHTML='<div class="empty">暂无匹配记录</div>';
+    document.getElementById('recPager').innerHTML='';
+    return;
+  }
+  body.innerHTML=rows.map(r=>{
+    const nick=esc(r.nickname||'（未命名）');
+    const oid=esc(r.uid||'-');
+    let songText='';
+    let title='';
+    if(r.type==='play'){
+      songText=esc(r.song||'未知')+(r.singer?' · '+esc(r.singer):'');
+      title=String(r.song||'')+(r.singer?' · '+r.singer:'');
+    }else{
+      songText='搜：'+esc(r.keyword||'-');
+      title=String(r.keyword||'');
+    }
+    const url=r.type==='play'?recordSongUrl(r):'';
+    const songHtml=url
+      ? ('<a href="'+esc(url)+'" target="_blank" rel="noopener" title="打开歌曲原链接">'+songText+'</a>')
+      : songText;
+    return '<div class="rec-item">'+
+      recordUserAvatar(r)+
+      '<div class="rec-main">'+
+        '<div class="rec-top">'+
+          '<div class="rec-song" title="'+esc(title)+'">'+songHtml+'</div>'+
+          '<span class="rec-time">'+ts2str(r.ts)+'</span>'+
+        '</div>'+
+        '<div class="rec-userline" title="'+nick+' '+oid+'">'+
+          '<span class="rec-name">'+nick+'</span>'+
+          '<span class="rec-oid">'+oid+'</span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  renderPager(tp);
+}
+function renderPager(tp){
+  const el=document.getElementById('recPager');
+  if(!el)return;
+  el.innerHTML=buildPagerHtml(recPage,tp,'goRecPage');
+}
+function goRecPage(p){recPage=Math.max(1,Number(p)||1);renderRecords();}
+function userAvatarHtml(u){
+  const nick=String((u&&u.nickname)||'').trim();
+  const uid=String((u&&u.user_id)||'').trim();
+  const appid=String((u&&u.appid)||'').trim();
+  let av=String((u&&u.avatar)||'').trim();
+  if(!av&&appid&&uid)av='https://q.qlogo.cn/qqapp/'+encodeURIComponent(appid)+'/'+encodeURIComponent(uid)+'/100';
+  const name=esc(nick||uid||'（未命名）');
+  if(av&&/^https?:\/\//i.test(av)){
+    const fb=recordLetterAvatar({nickname:nick,uid:uid});
+    return '<span class="usr-cell"><img class="usr-avatar" src="'+esc(av)+'" alt="" referrerpolicy="no-referrer" data-fb="'+esc(fb)+'" onerror="this.onerror=null;this.src=this.dataset.fb||\'\'"><span class="usr-name" title="'+name+'">'+name+'</span></span>';
+  }
+  return '<span class="usr-cell"><img class="usr-avatar" src="'+recordLetterAvatar({nickname:nick,uid:uid})+'" alt=""><span class="usr-name" title="'+name+'">'+name+'</span></span>';
+}
+function renderUsers(){const body=document.getElementById('usersBody');const users=DASH.users||[];if(!users.length){body.innerHTML='<tr><td colspan="6" class="empty">暂无用户</td></tr>';return;}body.innerHTML=users.map(u=>{const key=jsq(u.user_key||'');const uid=jsq(u.user_id||'');return `<tr class="row-select" onclick="selectUser('${uid}')" title="点击选中该用户"><td>${userAvatarHtml(u)}</td><td>${lyricsBadge(u.effective_show_lyrics)}</td><td>${lyricsBadge(u.show_lyrics,'跟随全局')}</td><td>${u.searches||0}</td><td>${u.plays||0}</td><td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();editUserFromTable('${key}')">编辑</button> <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();editUserLyrics('${key}')">切换</button></td></tr>`;}).join('');}
+function renderGroups(){
+  const body=document.getElementById('groupsBody');
+  const hint=document.getElementById('groupsCountHint');
+  let groups=DASH.groups||[];
+  if(groupFilterKw)groups=groups.filter(g=>groupMatchQuery(g,groupFilterKw));
+  if(hint)hint.textContent=groups.length?('共 '+groups.length+' 个'):'';
+  if(!groups.length){
+    body.innerHTML='<div class="empty">'+(groupFilterKw?'无匹配群':'暂无群')+'</div>';
+    return;
+  }
+  const cur=String((currentGroup&&currentGroup.group_id)||'');
+  body.innerHTML=groups.map(g=>{
+    const gid=jsq(g.group_id||'');
+    const rawGid=String(g.group_id||'');
+    const gname=esc(groupDisplayName(g));
+    const active=cur&&cur===rawGid?' is-active':'';
+    return '<div class="grp-item'+active+'" onclick="selectTopGroup(\''+gid+'\',true)" title="点击选中">'+
+      '<div class="grp-item-head">'+
+        groupAvatarHtml(g)+
+        '<div class="grp-item-meta">'+
+          '<div class="grp-item-name">'+gname+'</div>'+
+          '<div class="grp-item-sub">'+
+            '<span>'+fmtMemberCount(g.member_count)+' 人</span>'+
+            '<span>搜 '+(g.searches||0)+'</span>'+
+            '<span>播 '+(g.plays||0)+'</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="grp-item-stats">'+
+        '<span>生效 '+lyricsBadge(g.effective_show_lyrics)+'</span>'+
+        '<span>群设 '+lyricsBadge(g.show_lyrics,'跟随')+'</span>'+
+      '</div>'+
+      '<div class="act-btns">'+
+        '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();setGroupLyrics(\''+gid+'\',true)">开</button>'+
+        '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();setGroupLyrics(\''+gid+'\',false)">关</button>'+
+        '<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();setGroupLyrics(\''+gid+'\',null)">跟随</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
 function filterGroupsByQuery(q){
   let arr=DASH.groups||[];
   const qq=(q||'').trim().toLowerCase();
@@ -1270,7 +1642,14 @@ function selectTopGroup(gid,scroll){
   const psel=document.getElementById('groupSourceSel');
   if(psel)psel.value=g.music_source||'';
   bar.classList.add('show');
-  if(scroll)bar.scrollIntoView({behavior:'smooth',block:'nearest'});
+  renderGroups();
+  const editor=document.getElementById('groupRemarkCard');
+  const groupsPanel=document.getElementById('panel-groups');
+  if(scroll&&editor&&groupsPanel&&groupsPanel.classList.contains('active')){
+    editor.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }else if(scroll){
+    bar.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
 }
 function handleGroupFilter(v){
   groupFilterKw=(v||'').trim().toLowerCase();
@@ -1284,7 +1663,7 @@ function pickGroupFilter(gid){
   closeAllPickLists();
   syncSclear(document.getElementById('groupFilterIn'),document.getElementById('groupFilterClear'));
   renderGroups();
-  selectTopGroup(gid,false);
+  selectTopGroup(gid,true);
 }
 function clearGroupFilter(){
   document.getElementById('groupFilterIn').value='';
@@ -1324,11 +1703,11 @@ function handleUserSearch(v){
 }
 function selectUser(uid){const u=DASH.users.find(x=>x.user_id===uid)||{};currentUser=u;document.getElementById('userSearch').value=u.user_id||u.user_key||'';syncSclear(document.getElementById('userSearch'),document.getElementById('userSearchClear'));closeAllPickLists();const t=document.getElementById('userTarget');document.getElementById('userTargetName').textContent=u.nickname||u.user_id||'-';document.getElementById('userTargetId').textContent=u.user_key||'';const eff=u.effective_show_lyrics?'开':'关';const personal=u.show_lyrics===true?'开':u.show_lyrics===false?'关':'跟随';document.getElementById('userTargetStats').innerHTML=`<span class="target-chip">生效:${eff}</span><span class="target-chip">个人:${personal}</span><span class="target-chip">搜索:${u.searches||0}</span><span class="target-chip">播放:${u.plays||0}</span>`;t.classList.add('show');}
 function clearQuick(inp,list,target){document.getElementById(inp).value='';closeAllPickLists();document.getElementById(target).classList.remove('show');if(target==='userTarget')currentUser=null;syncSclear(document.getElementById(inp),document.getElementById(inp+'Clear'));}
-function clr(id){document.getElementById(id).value='';syncSclear(document.getElementById(id),document.getElementById(id+'Clear'));recPage=1;renderRecords();}
-function clearFilters(){document.getElementById('recKw').value='';document.getElementById('recType').value='';const sc=document.getElementById('recScope');if(sc)sc.value='';document.getElementById('recGroupIn').value='';document.getElementById('recUserIn').value='';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
-function viewUserRecords(){switchTab('records');document.getElementById('recKw').value='';document.getElementById('recType').value='';const sc=document.getElementById('recScope');if(sc)sc.value='';document.getElementById('recGroupIn').value='';document.getElementById('recUserIn').value=currentUser&&currentUser.user_id?currentUser.user_id:'';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
-function viewGroupRecords(){switchTab('records');document.getElementById('recKw').value='';document.getElementById('recType').value='';const sc=document.getElementById('recScope');if(sc)sc.value='group';document.getElementById('recUserIn').value='';document.getElementById('recGroupIn').value=currentGroup&&currentGroup.group_id?currentGroup.group_id:'';['recKw','recGroupIn','recUserIn'].forEach(id=>syncSclear(document.getElementById(id),document.getElementById(id+'Clear')));recPage=1;renderRecords();}
+function clearFilters(){document.getElementById('recKw').value='';document.getElementById('recType').value='play';const sc=document.getElementById('recScope');if(sc)sc.value='';syncSclear(document.getElementById('recKw'),document.getElementById('recKwClear'));recPage=1;renderRecords();}
+function viewUserRecords(){switchTab('records');document.getElementById('recKw').value=(currentUser&&(currentUser.nickname||currentUser.user_id))||'';document.getElementById('recType').value='play';const sc=document.getElementById('recScope');if(sc)sc.value='';syncSclear(document.getElementById('recKw'),document.getElementById('recKwClear'));recPage=1;renderRecords();}
+function viewGroupRecords(){switchTab('records');document.getElementById('recKw').value='';document.getElementById('recType').value='play';const sc=document.getElementById('recScope');if(sc)sc.value='group';syncSclear(document.getElementById('recKw'),document.getElementById('recKwClear'));recPage=1;renderRecords();}
 async function toggleGlobalLyrics(v){await fetch(API+'/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({show_lyrics:v})});fetchData();}
+async function toggleRecordSearches(v){try{const r=await fetch(API+'/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({record_searches:!!v})});const j=await r.json();if(j.ok){toast(v?'已开启搜索记录':'已关闭搜索记录（只记听歌）');}else toast(j.error||'设置失败');}catch(e){toast('设置失败');}}
 async function editUserLyrics(user_key){const u=DASH.users.find(x=>x.user_key===user_key);const val=nextLyricsState(u?u.show_lyrics:null);try{const r=await fetch(API+'/user_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_key:user_key,show_lyrics:val})});const j=await r.json();if(!j.ok){toast(j.error||'操作失败');return;}toast('已更新');await fetchData();if(currentUser&&currentUser.user_key===user_key)selectUser(currentUser.user_id);}catch(e){toast('操作失败');}}
 async function toggleUserLyrics(){if(!currentUser)return;await editUserLyrics(currentUser.user_key);}
 async function setGroupLyrics(gid,v){try{const r=await fetch(API+'/group_settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({group_id:gid,show_lyrics:v})});const j=await r.json();if(!j.ok){toast(j.error||'操作失败');return;}toast('已保存');await fetchData();if(gid)selectTopGroup(gid,false);}catch(e){toast('操作失败');}}
@@ -1349,6 +1728,19 @@ async function setNewGroup(val){
   }catch(e){toast('操作失败');}
 }
 async function init(){
+  function hydrateIcons(){
+    const logo=document.getElementById('brandLogo');
+    if(logo)logo.innerHTML=icon('music');
+    const sun=document.getElementById('dnSun');
+    const moon=document.getElementById('dnMoon');
+    if(sun)sun.innerHTML=icon('sun');
+    if(moon)moon.innerHTML=icon('moon');
+    document.querySelectorAll('[data-ico]').forEach(el=>{
+      const name=el.getAttribute('data-ico');
+      if(name&&ICONS[name])el.innerHTML=ICONS[name];
+    });
+  }
+  hydrateIcons();
   initThemeBg();
   document.getElementById('chart').innerHTML='<div class="empty">加载中…</div>';
   bindPickList('userList',selectUser);
@@ -1365,8 +1757,6 @@ async function init(){
   bindInputClear('groupFilterIn','groupFilterClear',handleGroupFilter,clearGroupFilter);
   bindInputClear('topGroupInput','topGroupClear',handleTopGroupPick,clearTopGroupPick);
   bindInputClear('recKw','recKwClear',()=>{recPage=1;renderRecords();},()=>{recPage=1;renderRecords();});
-  bindInputClear('recGroupIn','recGroupInClear',()=>{recPage=1;renderRecords();},()=>{recPage=1;renderRecords();});
-  bindInputClear('recUserIn','recUserInClear',()=>{recPage=1;renderRecords();},()=>{recPage=1;renderRecords();});
   renderUsers();
   renderGroups();
   renderTopGroupSelect();

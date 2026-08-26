@@ -37,6 +37,7 @@ PRESETS: tuple[MusicSource, ...] = (
         kind='msg_n',
         search_url='https://a.aa.cab/qq.music?msg={msg}',
         play_url='https://a.aa.cab/qq.music?msg={msg}&n={n}',
+        lyric_url='https://api.vkeys.cn/v2/music/tencent/lyric?mid={mid}',
         aliases=('第三方', 'aa', '个人站', '默认', '默认接口', '原版'),
         short='第三方',
         badge='默认',
@@ -65,7 +66,7 @@ PRESETS: tuple[MusicSource, ...] = (
         aliases=('落月', '落月qq', 'vkeys', '落月api'),
         short='落月QQ',
         badge='HQ',
-        note='落月 api.vkeys.cn。常为较高音质；部分曲目可能仅有短时试听，插件会尝试其他接口。',
+        note='落月 api.vkeys.cn。搜索偶发 503 会自动试备用域；播放失败回落第三方。',
     ),
     MusicSource(
         id='epdd_qq',
@@ -79,7 +80,7 @@ PRESETS: tuple[MusicSource, ...] = (
         aliases=('落月备用', 'epdd', 'epddqq', '备用域'),
         short='落月备',
         badge='镜像',
-        note='落月备用域名 api.epdd.cn，协议与落月 QQ 相同。主域不可用时可切换。',
+        note='落月备用域名。主域不可用时自动互备。',
     ),
     MusicSource(
         id='vkeys_netease',
@@ -93,7 +94,7 @@ PRESETS: tuple[MusicSource, ...] = (
         aliases=('网易', '网易云', 'ne', '163', 'netease'),
         short='网易云',
         badge='换平台',
-        note='网易云曲库。部分歌曲可能无直链；与 QQ 曲库不完全对应。',
+        note='网易云曲库。直链不稳时会自动改走 QQ 第三方/落月播放。',
     ),
     MusicSource(
         id='epdd_netease',
@@ -107,7 +108,7 @@ PRESETS: tuple[MusicSource, ...] = (
         aliases=('网易备用', 'epdd网易', 'epddne'),
         short='网易备',
         badge='镜像',
-        note='网易云备用域名。主域不可用时的退路。',
+        note='网易云备用域。播放失败时同样回落到 QQ 源。',
     ),
 )
 
@@ -233,26 +234,41 @@ def _fmt(url: str, **kwargs: Any) -> str:
         return url
 
 
-async def _get_json(url: str) -> Any:
+async def _get_json(url: str, *, retries: int = 1) -> Any:
     from plugins.qq_music.service import _http
+    import asyncio
 
-    c = await _http()
-    resp = await c.get(url)
-    if getattr(resp, 'status_code', 200) >= 400:
-        return None
-    try:
-        body = resp.json()
-    except Exception:
-        return None
-    if isinstance(body, dict):
-        code = body.get('code')
-        if code is not None:
-            try:
-                if int(code) not in (0, 200):
-                    return None
-            except (TypeError, ValueError):
-                pass
-    return body
+    last_body = None
+    for attempt in range(max(1, retries + 1)):
+        try:
+            c = await _http()
+            resp = await c.get(url)
+            if getattr(resp, 'status_code', 200) >= 400:
+                last_body = None
+            else:
+                try:
+                    body = resp.json()
+                except Exception:
+                    body = None
+                last_body = body
+                if isinstance(body, dict):
+                    code = body.get('code')
+                    if code is not None:
+                        try:
+                            if int(code) in (0, 200):
+                                return body
+                        except (TypeError, ValueError):
+                            return body
+                    else:
+                        return body
+                elif body is not None:
+                    return body
+        except Exception:
+            log.debug('请求失败 attempt=%s url=%s', attempt, url, exc_info=True)
+            last_body = None
+        if attempt < retries:
+            await asyncio.sleep(0.35 * (attempt + 1))
+    return last_body if isinstance(last_body, dict) and last_body.get('data') else None
 
 
 def _unwrap(body: Any) -> Any:
@@ -347,11 +363,20 @@ _SKIP_TITLE = (
 _FALLBACK = {
     'official_qq': ('aa_qq', 'vkeys_qq', 'epdd_qq', 'vkeys_netease', 'epdd_netease'),
     'aa_qq': ('vkeys_qq', 'epdd_qq', 'vkeys_netease', 'epdd_netease'),
-    'vkeys_qq': ('aa_qq', 'epdd_qq', 'vkeys_netease', 'epdd_netease'),
-    'epdd_qq': ('aa_qq', 'vkeys_qq', 'vkeys_netease', 'epdd_netease'),
-    'vkeys_netease': ('epdd_netease',),
-    'epdd_netease': ('vkeys_netease',),
+    'vkeys_qq': ('epdd_qq', 'aa_qq', 'vkeys_netease', 'epdd_netease'),
+    'epdd_qq': ('vkeys_qq', 'aa_qq', 'vkeys_netease', 'epdd_netease'),
+    # 落月网易云直链经常 500：自动回落到 QQ 源
+    'vkeys_netease': ('epdd_netease', 'aa_qq', 'vkeys_qq', 'epdd_qq'),
+    'epdd_netease': ('vkeys_netease', 'aa_qq', 'vkeys_qq', 'epdd_qq'),
     'custom': ('aa_qq', 'vkeys_qq', 'epdd_qq'),
+}
+
+# 搜索失败时同平台镜像域互备
+_SEARCH_MIRROR = {
+    'vkeys_qq': 'epdd_qq',
+    'epdd_qq': 'vkeys_qq',
+    'vkeys_netease': 'epdd_netease',
+    'epdd_netease': 'vkeys_netease',
 }
 
 
@@ -539,6 +564,20 @@ def _mark_fallback(got: dict[str, Any], origin: MusicSource, *, full: bool) -> d
 
 
 async def search_source(src: MusicSource, keyword: str, limit: int = 10) -> list[dict[str, Any]]:
+    rows = await _search_source_once(src, keyword, limit)
+    if rows:
+        return rows
+    mirror_id = _SEARCH_MIRROR.get(src.id)
+    if not mirror_id:
+        return []
+    alt = get_source(mirror_id)
+    if alt.id == src.id:
+        return []
+    log.debug('主源搜索为空，尝试镜像 source=%s -> %s', src.id, alt.id)
+    return await _search_source_once(alt, keyword, limit)
+
+
+async def _search_source_once(src: MusicSource, keyword: str, limit: int = 10) -> list[dict[str, Any]]:
     if src.kind == 'official_qq':
         from plugins.qq_music.official_qq import search_official
         from plugins.qq_music.settings import get_store
@@ -547,7 +586,7 @@ async def search_source(src: MusicSource, keyword: str, limit: int = 10) -> list
         return [_norm_search_item(src, item, i) for i, item in enumerate(rows, 1)]
 
     url = _fmt(src.search_url, msg=keyword, word=keyword)
-    body = await _get_json(url)
+    body = await _get_json(url, retries=1)
     data = _unwrap(body)
     rows: list[Any]
     if isinstance(data, list):
@@ -659,7 +698,7 @@ async def _play_direct(
                 f'?word={urllib.parse.quote(keyword)}&choose={index}&quality={q}'
             )
         try:
-            body = await _get_json(url)
+            body = await _get_json(url, retries=1)
         except Exception:
             log.debug('音源播放请求失败 source=%s q=%s', src.id, q)
             continue
@@ -669,6 +708,20 @@ async def _play_direct(
         last = _norm_play(src, data, item)
         if last.get('music'):
             return last
+    # 网易云 id 直链常挂：再试一次按歌名 choose
+    if src.platform == 'netease' and keyword:
+        for q in qualities[:3]:
+            url = (
+                f'{src.search_url.split("?", 1)[0]}'
+                f'?word={urllib.parse.quote(str(item.get("song") or keyword))}'
+                f'&choose=1&quality={q}'
+            )
+            body = await _get_json(url, retries=0)
+            data = _unwrap(body)
+            if isinstance(data, dict):
+                got = _norm_play(src, data, item)
+                if got.get('music'):
+                    return got
     return last
 
 
@@ -746,24 +799,54 @@ async def fetch_source_lrc(src: MusicSource, item: dict[str, Any]) -> str:
         return ''
     sid = str(item.get('id') or '').strip()
     mid = str(item.get('mid') or '').strip()
-    url = _fmt(src.lyric_url, id=sid or mid, mid=mid)
-    if '{id}' in src.lyric_url and not (sid or mid):
-        return ''
-    try:
-        body = await _get_json(url)
-    except Exception:
-        return ''
-    data = _unwrap(body)
-    if isinstance(data, dict):
-        return str(data.get('lrc') or data.get('lyric') or data.get('lyrics') or '')
-    return str(data or '')
+    # QQ 落月：songmid 必须走 mid=；数字 songid 走 id=
+    candidates: list[str] = []
+    tmpl = src.lyric_url
+    if 'tencent/lyric' in tmpl:
+        if mid and not mid.isdigit():
+            candidates.append(
+                f"{tmpl.split('?', 1)[0]}?mid={urllib.parse.quote(mid)}"
+            )
+        if sid and sid.isdigit():
+            candidates.append(
+                f"{tmpl.split('?', 1)[0]}?id={urllib.parse.quote(sid)}"
+            )
+        elif mid and mid.isdigit():
+            candidates.append(
+                f"{tmpl.split('?', 1)[0]}?id={urllib.parse.quote(mid)}"
+            )
+    track_id = sid or mid
+    if not candidates:
+        url = _fmt(tmpl, id=track_id, mid=mid or track_id)
+        if ('{id}' in tmpl or '{mid}' in tmpl) and not track_id:
+            return ''
+        candidates.append(url)
+    for url in candidates:
+        if not url or '{' in url:
+            continue
+        try:
+            body = await _get_json(url)
+        except Exception:
+            continue
+        data = _unwrap(body)
+        if isinstance(data, dict):
+            for key in ('lrc', 'lyric', 'lyrics', 'lyric_str'):
+                val = data.get(key)
+                if isinstance(val, dict):
+                    inner = val.get('lyric') or val.get('lrc') or val.get('text') or ''
+                    if inner:
+                        return str(inner)
+                elif val:
+                    return str(val)
+        elif data:
+            return str(data)
+    return ''
 
 
 def format_source_help(current: MusicSource, *, group: bool = False, custom_url: str = '') -> str:
     scope = '本群' if group else '全局'
     lines = [
-        '## 🎵 歌源切换',
-        '──────────────',
+        '## 🎵 歌源',
         f'当前{scope}：**{current.name}**',
         '',
     ]
@@ -773,17 +856,12 @@ def format_source_help(current: MusicSource, *, group: bool = False, custom_url:
         rows.append(_custom_source(custom))
     for i, src in enumerate(rows, 1):
         mark = ' ◀' if src.id == current.id else ''
-        badge = f' 〔{src.badge}〕' if src.badge else ''
-        lines.append(f'{i}. {src.name}{badge}{mark}')
-        if src.note:
-            lines.append(f'   {src.note}')
+        badge = f' · {src.badge}' if src.badge else ''
+        lines.append(f'{i}. {src.short or src.name}{badge}{mark}')
     lines.extend([
         '',
-        f'发送 `#歌源 1` / `#歌源 落月` / `#歌源 官方` 切换{scope}歌源。',
-        '群内还可 `#歌源 跟随` 恢复跟随全局。',
-        '默认使用第三方搜索/播放接口；官方搜索更准，播放会自动尝试其他接口。',
-        '请遵守法律与版权；音源可用性不保证。',
-        '换源后请重新 `#点歌`；已搜出的列表仍按搜索时的源播放。',
+        f'`#歌源 1` / `#歌源 落月` / `#歌源 官方` 切换{scope}',
+        '群内 `#歌源 跟随` 恢复全局 · 换源后请重新 `#点歌`',
     ])
     return '\n'.join(lines)
 

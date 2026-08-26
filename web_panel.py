@@ -64,9 +64,9 @@ async def api_stats(request):
 async def api_records(request):
     rec_type = (request.query.get('type') or '').strip()
     try:
-        limit = int(request.query.get('limit') or 200)
+        limit = int(request.query.get('limit') or 50)
     except (TypeError, ValueError):
-        limit = 200
+        limit = 50
     records = get_store().records_view(rec_type, limit)
     return web.json_response({'ok': True, 'data': {'records': records}})
 
@@ -82,6 +82,8 @@ async def api_get_settings(request):
     return web.json_response({
         'ok': True,
         'show_lyrics': store.get_global_show_lyrics(),
+        'record_plays': store.get_record_plays(),
+        'record_searches': store.get_record_searches(),
         'music_source': src.id,
         'music_source_name': src.name,
         'music_source_note': src.note,
@@ -127,12 +129,18 @@ async def api_post_settings(request):
         store.set_music_source(src.id)
     if 'show_lyrics' in body:
         store.set_global_show_lyrics(bool(body.get('show_lyrics')))
+    if 'record_plays' in body:
+        store.set_record_plays(bool(body.get('record_plays')))
+    if 'record_searches' in body:
+        store.set_record_searches(bool(body.get('record_searches')))
     sid = store.get_music_source()
     custom = store.get_custom_source_url()
     src = get_source(sid, custom)
     return web.json_response({
         'ok': True,
         'show_lyrics': store.get_global_show_lyrics(),
+        'record_plays': store.get_record_plays(),
+        'record_searches': store.get_record_searches(),
         'music_source': src.id,
         'music_source_name': src.name,
         'music_source_note': src.note,

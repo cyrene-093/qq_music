@@ -1,6 +1,8 @@
 {
   "global": {
     "show_lyrics": true,
+    "record_plays": true,
+    "record_searches": false,
     "music_source": "aa_qq",
     "custom_source_url": ""
   },
@@ -13,5 +15,6 @@
   "users": {},
   "song_stats": {},
   "groups": {},
-  "records": []
+  "records": [],
+  "records_cleaned_on": ""
 }
