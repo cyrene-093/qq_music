@@ -57,7 +57,7 @@ _PANEL_HTML = os.path.join(_PLUGIN_DIR, 'panel.html')
 
 __plugin_meta__ = {
     'name': 'QQ音乐点歌',
-    'author': 'cyrene-093',
+    'author': '飞行漂绒',
     'description': 'QQ 点歌：个人/群点歌、多歌源、LRC、Web 面板。第三方音源，请遵守版权，建议自用娱乐。',
     'version': '1.9.4',
     'license': 'MIT',
