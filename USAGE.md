@@ -231,7 +231,6 @@ https://example.com/qq.music?msg={msg}&n={n}
 | `LICENSE` | MIT 许可证全文 |
 | `README.md` | 简介、安装、目录 |
 | `USAGE.md` | 本使用说明 |
-| `PUBLISH.md` | 开源上架说明 |
 | `.gitignore` | 忽略运行时数据与缓存 |
 
 ---
